@@ -12,6 +12,7 @@ SetWorkingDir %A_ScriptDir%
 #Persistent
 #MaxThreadsPerHotkey, 4
 
+; Define Tray Icon
 Menu, Tray, Icon, %A_ScriptDir%\..\assets\normal.ico, 1
 Menu, Tray, Tip, TetraAIO v1.1.0
 
@@ -221,11 +222,6 @@ functionChangeStatus("Suspend")
 Return
 
 
-
-
-; DllCall("SystemParametersInfo", UInt, 0x70, UInt, 0, UIntP, 20, UInt, 0)
-
-
 /**
  * Function : Things that are hidden, not seen by others
  */
@@ -327,7 +323,7 @@ functionSetMouse(mouseDevice) {
     Switch mouseDevice
     {
         Case "G102IC":
-            DllCall("SystemParametersInfo", "UInt", 0x71, "UInt", 0, "Ptr", 7, "UInt", 0)
+            DllCall("SystemParametersInfo", "UInt", 0x71, "UInt", 0, "Ptr", 9, "UInt", 0)
             Return
         Case "M590":
             DllCall("SystemParametersInfo", "UInt", 0x71, "UInt", 0, "Ptr", 7, "UInt", 0)
@@ -375,6 +371,7 @@ functionChangeStatus(newStatus) {
             Return
     }
 }
+
 
 ; #######################
 ; # Change Audio Device #
