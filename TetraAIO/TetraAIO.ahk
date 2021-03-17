@@ -251,6 +251,7 @@ functionSetAudioDevice(audioDevice) {
     Switch audioDevice
     {
         Case "Speaker":
+            SetDefaultEndpoint(GetDeviceID(Devices, "스피커"))
             SetDefaultEndpoint(GetDeviceID(Devices, "Speaker"))
             If (hotkeyFoobar2000 = true) {
                 functionFoobar2000SetVolume(17)
@@ -258,6 +259,7 @@ functionSetAudioDevice(audioDevice) {
             Return
         Case "Headset":
             SetDefaultEndpoint(GetDeviceID(Devices, "헤드셋 이어폰"))
+            SetDefaultEndpoint(GetDeviceID(Devices, "Headset Earphone"))
             If (hotkeyFoobar2000 = true) {
                 functionFoobar2000SetVolume(35)
             }
