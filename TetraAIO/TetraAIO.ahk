@@ -14,7 +14,7 @@ SetWorkingDir %A_ScriptDir%
 
 ; Define Tray Icon
 Menu, Tray, Icon, %A_ScriptDir%\..\assets\normal.ico, 1
-Menu, Tray, Tip, TetraAIO v1.1.0
+Menu, Tray, Tip, TetraAIO v1.1.2
 
 
 /**
@@ -55,22 +55,22 @@ Menu, submenuAudio, Check, foobar2000 Volume Change [Enabled]
 Menu, Tray, Add, &AudioHotkey, :submenuAudio
 Menu, Tray, Icon, &AudioHotkey, ddores.dll, 2
 ; End of submenu Audio
-Menu, Tray, Add ; Add separator
-; Start of submenu Mouse (MouseHotkey)
-Menu, submenuMouse, Add, README, labelREADMEMouse
-Menu, submenuMouse, Icon, README, shell32.dll, 78
-Menu, submenuMouse, Default, README
-Menu, submenuMouse, Add ; Add separator (submenuMouse)
-Menu, submenuMouse, Add, G102IC, labelUseG102IC
-Menu, submenuMouse, Icon, G102IC, mstscax.dll, 6 ; Wired Icon (I guess)
-Menu, submenuMouse, Add, M590, labelUseM590
-Menu, submenuMouse, Icon, M590, netshell.dll, 103 ; Bluetooth Icon
-Menu, submenuMouse, Add ; Add separator (submenuMouse)
-Menu, submenuMouse, Add, MouseHotkey [Enabled], labelToggleMouseHotkey
-Menu, submenuMouse, Check, MouseHotkey [Enabled]
-Menu, Tray, Add, &MouseHotkey, :submenuMouse
-Menu, Tray, Icon, &MouseHotkey, ddores.dll, 29
-; End of submenu Mouse
+;Menu, Tray, Add ; Add separator
+;; Start of submenu Mouse (MouseHotkey)
+;Menu, submenuMouse, Add, README, labelREADMEMouse
+;Menu, submenuMouse, Icon, README, shell32.dll, 78
+;Menu, submenuMouse, Default, README
+;Menu, submenuMouse, Add ; Add separator (submenuMouse)
+;Menu, submenuMouse, Add, G102IC, labelUseG102IC
+;Menu, submenuMouse, Icon, G102IC, mstscax.dll, 6 ; Wired Icon (I guess)
+;Menu, submenuMouse, Add, M590, labelUseM590
+;Menu, submenuMouse, Icon, M590, netshell.dll, 103 ; Bluetooth Icon
+;Menu, submenuMouse, Add ; Add separator (submenuMouse)
+;Menu, submenuMouse, Add, MouseHotkey [Enabled], labelToggleMouseHotkey
+;Menu, submenuMouse, Check, MouseHotkey [Enabled]
+;Menu, Tray, Add, &MouseHotkey, :submenuMouse
+;Menu, Tray, Icon, &MouseHotkey, ddores.dll, 29
+;; End of submenu Mouse
 Menu, Tray, Add ; Add separator
 ; Start of submenu Dev
 Menu, submenuDev, Add, Open Inspector, labelDevInspector
@@ -254,14 +254,14 @@ functionSetAudioDevice(audioDevice) {
             SetDefaultEndpoint(GetDeviceID(Devices, "스피커"))
             SetDefaultEndpoint(GetDeviceID(Devices, "Speaker"))
             If (hotkeyFoobar2000 = true) {
-                functionFoobar2000SetVolume(17)
+                functionFoobar2000SetVolume(8)
             }
             Return
         Case "Headset":
             SetDefaultEndpoint(GetDeviceID(Devices, "헤드셋 이어폰"))
             SetDefaultEndpoint(GetDeviceID(Devices, "Headset Earphone"))
             If (hotkeyFoobar2000 = true) {
-                functionFoobar2000SetVolume(35)
+                functionFoobar2000SetVolume(30)
             }
             Return
         Default:
