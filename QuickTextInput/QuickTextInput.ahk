@@ -14,7 +14,7 @@ SetWorkingDir %A_ScriptDir%
 
 ;@Ahk2Exe-SetMainIcon QuickTextInput.ico ; Default Icon
 ;@Ahk2Exe-AddResource QuickTextInput_Gray.ico, 160 ; Suspend Icon
-;@Ahk2Exe-AddResource QuickTextInput_Red.ico, 207 ; Pause Icon
+;;@Ahk2Exe-AddResource QuickTextInput_Red.ico, 207 ; Pause Icon
 Menu, Tray, NoStandard
 ;@Ahk2Exe-IgnoreBegin
 Menu, Tray, Icon, QuickTextInput.ico
@@ -195,14 +195,20 @@ SuspendScript:
 	If (A_IsSuspended) {
 		Menu, Submenu, Rename, Suspend Script`t&S, Resume Script`t&S
 		;@Ahk2Exe-IgnoreBegin
-		Menu, Tray, Icon, QuickTextInput_Gray.ico
+		Menu, Tray, Icon, QuickTextInput_Gray.ico,,1
 		;@Ahk2Exe-IgnoreEnd
+		/*@Ahk2Exe-Keep
+		Menu, Tray, Icon, %A_ScriptName%, -160, 1
+		*/
 	}
 	Else
 	{
 		Menu, Submenu, Rename, Resume Script`t&S, Suspend Script`t&S
 		;@Ahk2Exe-IgnoreBegin
-		Menu, Tray, Icon, QuickTextInput.ico
+		Menu, Tray, Icon, QuickTextInput.ico,,1
 		;@Ahk2Exe-IgnoreEnd
+		/*@Ahk2Exe-Keep
+		Menu, Tray, Icon, %A_ScriptName%, -159, 1
+		*/
 	}
 Return

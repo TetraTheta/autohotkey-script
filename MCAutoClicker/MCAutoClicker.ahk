@@ -15,7 +15,7 @@ DetectHiddenWindows On
 
 ;@Ahk2Exe-SetMainIcon MCAutoClicker.ico ; Default Icon
 ;@Ahk2Exe-AddResource MCAutoClicker_Gray.ico, 160 ; Suspend Icon - Gray
-;@Ahk2Exe-AddResource MCAutoClicker_Red.ico, 207 ; Pause Icon - Red
+;;@Ahk2Exe-AddResource MCAutoClicker_Red.ico, 207 ; Pause Icon - Red
 Menu, Tray, NoStandard
 ;@Ahk2Exe-IgnoreBegin
 Menu, Tray, Icon, MCAutoClicker.ico
@@ -112,14 +112,20 @@ SuspendScript:
 	If (A_IsSuspended) {
 		Menu, Submenu, Rename, Suspend Script`t&S, Resume Script`t&S
 		;@Ahk2Exe-IgnoreBegin
-		Menu, Tray, Icon, MCAutoClicker_Gray.ico
+		Menu, Tray, Icon, MCAutoClicker_Gray.ico,,1
 		;@Ahk2Exe-IgnoreEnd
+		/*@Ahk2Exe-Keep
+		Menu, Tray, Icon, %A_ScriptName%, -160, 1
+		*/
 	}
 	Else
 	{
 		Menu, Submenu, Rename, Resume Script`t&S, Suspend Script`t&S
 		;@Ahk2Exe-IgnoreBegin
-		Menu, Tray, Icon, MCAutoClicker.ico
+		Menu, Tray, Icon, MCAutoClicker.ico,,1
 		;@Ahk2Exe-IgnoreEnd
+		/*@Ahk2Exe-Keep
+		Menu, Tray, Icon, %A_ScriptName%, -159, 1
+		*/
 	}
 Return
