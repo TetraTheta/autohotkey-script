@@ -1,4 +1,4 @@
-# TetraAIO  
+# AudioHotkey 
 This script was created for personal use. But if you want to use it, you can use it.
 However, I do not accept suggestions such as adding functions or changing specifications.
 
