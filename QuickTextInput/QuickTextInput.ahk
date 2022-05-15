@@ -23,7 +23,10 @@ Menu, Tray, Tip, Quick Text Input
 Menu, Tray, Add, Hotkey List`t&H, ShowInformation
 Menu, Tray, Add, Open Memo File`t&O, OpenTitleFile
 Menu, Tray, Add ; Separator
-Menu, Submenu, Add, Edit Script`t&E, EditScript
+If (!A_IsCompiled)
+{
+	Menu, Submenu, Add, Edit Script`t&E, EditScript
+}
 Menu, Submenu, Add, Reload Script`t&R, ReloadScript
 Menu, Submenu, Add ; Separator
 Menu, Submenu, Add, List Variables`t&V, ListVariables
