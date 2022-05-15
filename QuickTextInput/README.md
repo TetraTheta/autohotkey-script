@@ -38,3 +38,6 @@ You can also use the following predefined hotkeys:
 ## Config
 The config file is automatically created in the same path as the script.  
 Run the script file once, modify the config file, and then reload the script file.
+
+## Version Information
+Last Updated: 2022.05.15 (v1.0.0)

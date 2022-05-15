@@ -11,4 +11,5 @@ This script set IME between Korean and English automatically. If player opens ch
 최근 마인크래프트 버전업에서 창 제목이 바뀌었으므로 현재 이 스크립트는 작동하지 않습니다.  
 In recent update in Minecraft, it changed its window title so this script doesn't work now.  
   
-Current Version: v0.0.1
+## Version Information
+Last Updated: 2021.02.14 (v1.0.0)
