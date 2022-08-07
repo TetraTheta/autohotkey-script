@@ -25,7 +25,7 @@ Menu, Tray, Add, Hotkey Information`t&I, ShowInformation
 Menu, Tray, Add ; Separator
 If (!A_IsCompiled)
 {
-	Menu, Submenu, Add, Edit Script`t&E, EditScript
+  Menu, Submenu, Add, Edit Script`t&E, EditScript
 }
 Menu, Submenu, Add, Reload Script`t&R, ReloadScript
 Menu, Submenu, Add ; Separator
@@ -42,90 +42,90 @@ toggle_keep_click = 0
 toggle_repeat_click = 0
 
 #If WinExist(game_title)
-F10::GoSub, RepeatClickToggle
+  F10::GoSub, RepeatClickToggle
 XButton1::GoSub, KeepClickToggle
 F11::GoSub, KeepClickToggle
 #If
 
 EditScript:
-	Edit
+  Edit
 Return
 
 ExitScript:
-	ExitApp
+ExitApp
 Return
 
 KeepClickToggle:
-	If (toggle_keep_click := !toggle_keep_click)
-	{
-		MouseClick, Left,,,,,D
-		SetTimer, KeepClick, 100
-	}
-	Else
-	{
-		MouseClick, Left,,,,,U
-		SetTimer, KeepClick, Off
-	}
+  If (toggle_keep_click := !toggle_keep_click)
+  {
+    MouseClick, Left,,,,,D
+    SetTimer, KeepClick, 100
+  }
+  Else
+  {
+    MouseClick, Left,,,,,U
+    SetTimer, KeepClick, Off
+  }
 Return
 
 KeepClick:
-	WinGetTitle, current_window_title, A
-	If (GetKeyState("LButton") And !GetKeyState("LButton","P") And (current_window_title != game_title))
-	{
-		toggle_keep_click := !toggle_keep_click
-		MouseClick, Left,,,,,U
-	}
+  WinGetTitle, current_window_title, A
+  If (GetKeyState("LButton") And !GetKeyState("LButton","P") And (current_window_title != game_title))
+  {
+    toggle_keep_click := !toggle_keep_click
+    MouseClick, Left,,,,,U
+  }
 Return
 
 ReloadScript:
-	Reload
+  Reload
 Return
 
 RepeatClickToggle:
-	If (toggle_repeat_click := !toggle_repeat_click)
-	{
-		ControlGet, MHWND, Hwnd,,, %game_title%
-		SetTimer, RepeatClick, %click_interval%
-		GoSub, RepeatClick
-	}
-	Else
-	{
-		SetTimer, RepeatClick, Off
-	}
+  If (toggle_repeat_click := !toggle_repeat_click)
+  {
+    ControlGet, MHWND, Hwnd,,, %game_title%
+    SetTimer, RepeatClick, %click_interval%
+    GoSub, RepeatClick
+  }
+  Else
+  {
+    SetTimer, RepeatClick, Off
+  }
 Return
 
 RepeatClick:
-	SetControlDelay -1
-	ControlClick,, ahk_id %MHWND%,,,,NA
-	If (beep = 1)
-	{
-		SoundBeep, 1500
-	}
+  SetControlDelay -1
+  ControlClick,, ahk_id %MHWND%,,,,NA
+  If (beep = 1)
+  {
+    SoundBeep, 1500
+  }
 Return
 
 ShowInformation:
-	ListHotkeys
+  ListHotkeys
 Return
 
 SuspendScript:
-	Suspend, Toggle
-	If (A_IsSuspended) {
-		Menu, Submenu, Rename, Suspend Script`t&S, Resume Script`t&S
-		;@Ahk2Exe-IgnoreBegin
-		Menu, Tray, Icon, MCAutoClicker_Gray.ico,,1
-		;@Ahk2Exe-IgnoreEnd
+  Suspend, Toggle
+  If (A_IsSuspended) {
+    Menu, Submenu, Rename, Suspend Script`t&S, Resume Script`t&S
+    ;@Ahk2Exe-IgnoreBegin
+    Menu, Tray, Icon, MCAutoClicker_Gray.ico,,1
+    ;@Ahk2Exe-IgnoreEnd
 		/*@Ahk2Exe-Keep
 		Menu, Tray, Icon, %A_ScriptName%, -160, 1
-		*/
-	}
-	Else
-	{
-		Menu, Submenu, Rename, Resume Script`t&S, Suspend Script`t&S
-		;@Ahk2Exe-IgnoreBegin
-		Menu, Tray, Icon, MCAutoClicker.ico,,1
-		;@Ahk2Exe-IgnoreEnd
+    */
+  }
+  Else
+  {
+    Menu, Submenu, Rename, Resume Script`t&S, Suspend Script`t&S
+    ;@Ahk2Exe-IgnoreBegin
+    Menu, Tray, Icon, MCAutoClicker.ico,,1
+    ;@Ahk2Exe-IgnoreEnd
 		/*@Ahk2Exe-Keep
 		Menu, Tray, Icon, %A_ScriptName%, -159, 1
-		*/
-	}
+    */
+  }
 Return
