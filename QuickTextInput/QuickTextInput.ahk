@@ -8,7 +8,7 @@ SetWorkingDir %A_ScriptDir%
 ;@Ahk2Exe-SetCompanyName TetraTheta
 ;@Ahk2Exe-SetCopyright Copyright 2022. TetraTheta. All rights reserved.
 ;@Ahk2Exe-SetDescription Type predefined text quickly with hotkey
-;@Ahk2Exe-SetFileVersion 1.0.0.0
+;@Ahk2Exe-SetFileVersion 1.1.0.0
 ;@Ahk2Exe-SetLanguage 0x0412
 ;@Ahk2Exe-SetProductName Quick Text Input
 
@@ -21,6 +21,7 @@ Menu, Tray, Icon, QuickTextInput.ico
 ;@Ahk2Exe-IgnoreEnd
 Menu, Tray, Tip, Quick Text Input
 Menu, Tray, Add, Hotkey List`t&H, ShowInformation
+Menu, Tray, Add, Edit Hotkey List`t&K, EditInformation
 Menu, Tray, Add, Open Memo File`t&O, OpenTitleFile
 Menu, Tray, Add ; Separator
 If (!A_IsCompiled)
@@ -51,18 +52,17 @@ varC6 := IniGet("Text List", "Ctrl + Numpad6", "") ; Ctrl + Numpad6
 varC7 := IniGet("Text List", "Ctrl + Numpad7", "") ; Ctrl + Numpad7
 varC8 := IniGet("Text List", "Ctrl + Numpad8", "") ; Ctrl + Numpad8
 varC9 := IniGet("Text List", "Ctrl + Numpad9", "") ; Ctrl + Numpad9
-;varCAD := IniGet("Text List", "Ctrl + Alt + NumpadDot", "")
-;Ctrl + Alt + NumpadDot ; Disabled - Will act as Ctrl + Alt + Del
-varCA0 := IniGet("Text List", "Ctrl + Alt + Numpad0", "") ; Ctrl + Alt + Numpad0
-varCA1 := IniGet("Text List", "Ctrl + Alt + Numpad1", "") ; Ctrl + Alt + Numpad1
-varCA2 := IniGet("Text List", "Ctrl + Alt + Numpad2", "") ; Ctrl + Alt + Numpad2
-varCA3 := IniGet("Text List", "Ctrl + Alt + Numpad3", "") ; Ctrl + Alt + Numpad3
-varCA4 := IniGet("Text List", "Ctrl + Alt + Numpad4", "") ; Ctrl + Alt + Numpad4
-varCA5 := IniGet("Text List", "Ctrl + Alt + Numpad5", "") ; Ctrl + Alt + Numpad5
-varCA6 := IniGet("Text List", "Ctrl + Alt + Numpad6", "") ; Ctrl + Alt + Numpad6
-varCA7 := IniGet("Text List", "Ctrl + Alt + Numpad7", "") ; Ctrl + Alt + Numpad7
-varCA8 := IniGet("Text List", "Ctrl + Alt + Numpad8", "") ; Ctrl + Alt + Numpad8
-varCA9 := IniGet("Text List", "Ctrl + Alt + Numpad9", "") ; Ctrl + Alt + Numpad9
+varAD := IniGet("Text List", "Alt + NumpadDot", "") ; Alt + NumpadDot
+varA0 := IniGet("Text List", "Alt + Numpad0", "") ; Alt + Numpad0
+varA1 := IniGet("Text List", "Alt + Numpad1", "") ; Alt + Numpad1
+varA2 := IniGet("Text List", "Alt + Numpad2", "") ; Alt + Numpad2
+varA3 := IniGet("Text List", "Alt + Numpad3", "") ; Alt + Numpad3
+varA4 := IniGet("Text List", "Alt + Numpad4", "") ; Alt + Numpad4
+varA5 := IniGet("Text List", "Alt + Numpad5", "") ; Alt + Numpad5
+varA6 := IniGet("Text List", "Alt + Numpad6", "") ; Alt + Numpad6
+varA7 := IniGet("Text List", "Alt + Numpad7", "") ; Alt + Numpad7
+varA8 := IniGet("Text List", "Alt + Numpad8", "") ; Alt + Numpad8
+varA9 := IniGet("Text List", "Alt + Numpad9", "") ; Alt + Numpad9
 
 ; Hotkey
 ^NumpadDot::  Send, {Text}%varCD% ; Ctrl + NumpadDot
@@ -76,18 +76,17 @@ varCA9 := IniGet("Text List", "Ctrl + Alt + Numpad9", "") ; Ctrl + Alt + Numpad9
 ^Numpad7::    Send, {Text}%varC7% ; Ctrl + Numpad7
 ^Numpad8::    Send, {Text}%varC8% ; Ctrl + Numpad8
 ^Numpad9::    Send, {Text}%varC9% ; Ctrl + Numpad9
-;^!NumpadDot:: Send, {Text}%varCAD%
-; Ctrl + Alt + NumpadDot ; Disabled - Will act as Ctrl + Alt + Del
-^!Numpad0::   Send, {Text}%varCA0% ; Ctrl + Alt + Numpad0
-^!Numpad1::   Send, {Text}%varCA1% ; Ctrl + Alt + Numpad1
-^!Numpad2::   Send, {Text}%varCA2% ; Ctrl + Alt + Numpad2
-^!Numpad3::   Send, {Text}%varCA3% ; Ctrl + Alt + Numpad3
-^!Numpad4::   Send, {Text}%varCA4% ; Ctrl + Alt + Numpad4
-^!Numpad5::   Send, {Text}%varCA5% ; Ctrl + Alt + Numpad5
-^!Numpad6::   Send, {Text}%varCA6% ; Ctrl + Alt + Numpad6
-^!Numpad7::   Send, {Text}%varCA7% ; Ctrl + Alt + Numpad7
-^!Numpad8::   Send, {Text}%varCA8% ; Ctrl + Alt + Numpad8
-^!Numpad9::   Send, {Text}%varCA9% ; Ctrl + Alt + Numpad9
+!NumpadDot::  Send, {Text}%varAD%
+!Numpad0::    Send, {Text}%varA0% ; Alt + Numpad0
+!Numpad1::    Send, {Text}%varA1% ; Alt + Numpad1
+!Numpad2::    Send, {Text}%varA2% ; Alt + Numpad2
+!Numpad3::    Send, {Text}%varA3% ; Alt + Numpad3
+!Numpad4::    Send, {Text}%varA4% ; Alt + Numpad4
+!Numpad5::    Send, {Text}%varA5% ; Alt + Numpad5
+!Numpad6::    Send, {Text}%varA6% ; Alt + Numpad6
+!Numpad7::    Send, {Text}%varA7% ; Alt + Numpad7
+!Numpad8::    Send, {Text}%varA8% ; Alt + Numpad8
+!Numpad9::    Send, {Text}%varA9% ; Alt + Numpad9
 
 ^Insert::     Gosub, ReplaceNBSP
 ^Del::        Gosub, AppendRuby
@@ -103,6 +102,11 @@ AppendRuby:
 	clipboard := ""
 Return
 
+EditInformation:
+	RunWait, %EDITOR% %A_ScriptDir%\%SCRIPT%.ini
+	Reload
+Return
+
 EditScript:
 	Edit
 Return
@@ -115,7 +119,7 @@ GenerateInformation()
 {
 	Global info1, info2, info3
 	Global varCD, varC0, varC1, varC2, varC3, varC4, varC5, varC6, varC7, varC8, varC9
-	Global varCAD, varCA0, varCA1, varCA2, varCA3, varCA4, varCA5, varCA6, varCA7, varCA8, varCA9
+	Global varAD, varA0, varA1, varA2, varA3, varA4, varA5, varA6, varA7, varA8, varA9
 	
 	info1 := ""
 	info1 := info1 . "Ctrl + NumpadDot = " . varCD . "`n"
@@ -131,17 +135,17 @@ GenerateInformation()
 	info1 := info1 . "Ctrl + Numpad9 = " . varC9 . "`n"
 	
 	info2 := ""
-	info2 := info2 . "Ctrl + Alt + NumpadDot = " . "[DISABLED]" . "`n"
-	info2 := info2 . "Ctrl + Alt + Numpad0 = " . varCA0 . "`n"
-	info2 := info2 . "Ctrl + Alt + Numpad1 = " . varCA1 . "`n"
-	info2 := info2 . "Ctrl + Alt + Numpad2 = " . varCA2 . "`n"
-	info2 := info2 . "Ctrl + Alt + Numpad3 = " . varCA3 . "`n"
-	info2 := info2 . "Ctrl + Alt + Numpad4 = " . varCA4 . "`n"
-	info2 := info2 . "Ctrl + Alt + Numpad5 = " . varCA5 . "`n"
-	info2 := info2 . "Ctrl + Alt + Numpad6 = " . varCA6 . "`n"
-	info2 := info2 . "Ctrl + Alt + Numpad7 = " . varCA7 . "`n"
-	info2 := info2 . "Ctrl + Alt + Numpad8 = " . varCA8 . "`n"
-	info2 := info2 . "Ctrl + Alt + Numpad9 = " . varCA9 . "`n"
+	info2 := info2 . "Alt + NumpadDot = " . varAD . "`n"
+	info2 := info2 . "Alt + Numpad0 = " . varA0 . "`n"
+	info2 := info2 . "Alt + Numpad1 = " . varA1 . "`n"
+	info2 := info2 . "Alt + Numpad2 = " . varA2 . "`n"
+	info2 := info2 . "Alt + Numpad3 = " . varA3 . "`n"
+	info2 := info2 . "Alt + Numpad4 = " . varA4 . "`n"
+	info2 := info2 . "Alt + Numpad5 = " . varA5 . "`n"
+	info2 := info2 . "Alt + Numpad6 = " . varA6 . "`n"
+	info2 := info2 . "Alt + Numpad7 = " . varA7 . "`n"
+	info2 := info2 . "Alt + Numpad8 = " . varA8 . "`n"
+	info2 := info2 . "Alt + Numpad9 = " . varA9 . "`n"
 	
 	info3 := ""
 	info3 := info3 . "Ctrl + Insert = Replace NBSP to Space`n"
