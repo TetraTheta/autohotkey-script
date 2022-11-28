@@ -15,7 +15,7 @@ You can use 21 hotkeys to enter a predefined string.
   * <kbd>Ctrl</kbd> + <kbd>Numpad 7</kbd>
   * <kbd>Ctrl</kbd> + <kbd>Numpad 8</kbd>
   * <kbd>Ctrl</kbd> + <kbd>Numpad 9</kbd>
-  * ~~<kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Numpad 0</kbd>~~  
+  * ~~<kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Numpad .</kbd>~~  
     Disabled because it is recognized as a combination of Ctrl + Alt + Del
   * <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Numpad 0</kbd>
   * <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Numpad 1</kbd>
