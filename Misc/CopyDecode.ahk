@@ -1,10 +1,10 @@
 ; CopyDecode: When copy link from 'https://bluearchive.wikiru.jp/', decode its URL encoded string
 ; If not in use, turn off this script!
 
-#NoEnv ; Recommended for performance and compatibility with future AutoHotkey releases.
+#NoEnv
 #Persistent
-SendMode Input ; Recommended for new scripts due to its superior speed and reliability.
-SetWorkingDir %A_ScriptDir% ; Ensures a consistent starting directory.
+SendMode Input
+SetWorkingDir %A_ScriptDir%
 
 OnClipboardChange("CheckURL")
 return
