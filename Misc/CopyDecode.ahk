@@ -1,34 +1,44 @@
-; CopyDecode: When copy link from 'https://bluearchive.wikiru.jp/', decode its URL encoded string
-; If not in use, turn off this script!
+/**
+ * CopyDecode : When copy link from 'https://bluearchive.wikiru.jp/', extract name part and decode it
+ */
+; Turn this script off if it is not in use!
 
-#NoEnv
-#Persistent
-SendMode Input
-SetWorkingDir %A_ScriptDir%
+#Requires AutoHotkey v2
+#SingleInstance Force
+Persistent()
 
-OnClipboardChange("CheckURL")
+OnClipboardChange(CheckURL)
 return
 
 CheckURL(Type) {
-  If (Type == 1) {
-    If (InStr(Clipboard, "https://bluearchive.wikiru.jp/") == 1) {
-      new_clip := SubStr(Clipboard, 32)
-      Clipboard := URLDecode(new_clip)
-      Sleep, 20
-    }
+  if (Type != 1) {
+    Return
+  }
+  ; Check if copied text starts with 'https://bluearchive.wikiru.jp/'
+  if (InStr(A_Clipboard, "https://bluearchive.wikiru.jp/") == 1) {
+    ; Remove 'https://bluearchive.wikiru.jp/' part
+    ori_clip := A_Clipboard
+    cut_clip := SubStr(A_Clipboard, 32)
+    new_clip := URLDecode(cut_clip)
+    A_Clipboard := new_clip
+    TrayTip("Detected: " . cut_clip . "`nConverted: " . new_clip, "Conversion Result", 1)
+    Sleep(20)
   }
 }
 
-; source: https://github.com/ahkscript/libcrypt.ahk/blob/master/src/URI.ahk
+; Source: https://www.autohotkey.com/boards/viewtopic.php?t=112741#p502115
 URLDecode(Uri, Encoding:="UTF-8") {
-  Pos := 1
-  While Pos := RegExMatch(Uri, "i)(%[\da-f]{2})+", Code, Pos) {
-    VarSetCapacity(Var, StrLen(Code) // 3, 0), Code := SubStr(Code, 2)
-    Loop, Parse, Code, `%
-      NumPut("0x" A_LoopField, Var, A_Index - 1, "UChar")
-    Decoded := StrGet(&Var, Encoding)
-    Uri := SubStr(Uri, 1, Pos - 1) . Decoded . SubStr(Uri, Pos + StrLen(Code) + 1)
-    Pos += StrLen(Decoded) + 1
+  pos := 1
+  While pos := RegExMatch(Uri, "i)(%[\da-f]{2})+", &code, pos)
+  {
+      var := Buffer(StrLen(code[0]) // 3, 0)
+      code := SubStr(code[0],2)
+      Loop Parse, code, "%" {
+        NumPut("UChar", "0x" A_LoopField, var, A_Index-1)
+      }
+      decoded := StrGet(var, Encoding)
+      Uri := SubStr(Uri, 1, pos-1) . decoded . SubStr(Uri, pos+StrLen(code)+1)
+      pos += StrLen(decoded)+1
   }
-  Return, Uri
+  Return(Uri)
 }

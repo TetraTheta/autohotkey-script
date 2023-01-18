@@ -1,24 +1,24 @@
-﻿/**
- * MCAutoClicker v2.0.0 : Auto clicker for Minecraft
+/**
+ * BlueStacksMultiClick v1.0.0 : Send multiple 'Click' key stroke to BlueStacks windows
  */
+; BlueStacks' own Multiple Click cannot be configured to click in short interval and that's why this script does exist
+
 #Requires AutoHotkey v2
 #Include "..\Lib\ini.ahk"
 #SingleInstance Force
-InstallMouseHook(True, True)
 DetectHiddenWindows(True)
 
 ; Information about executable
-;@Ahk2Exe-AddResource icon_grey.ico, 160 ; Suspend icon - Gray
 ;@Ahk2Exe-SetCompanyName TetraTheta
 ;@Ahk2Exe-SetCopyright Copyright 2023. TetraTheta. All rights reserved.
-;@Ahk2Exe-SetDescription Auto clicker for Minecraft
-;@Ahk2Exe-SetFileVersion 2.0.0.0
+;@Ahk2Exe-SetDescription Send multiple 'Click' key stroke to BlueStacks window
+;@Ahk2Exe-SetFileVersion 1.0.0.0
 ;@Ahk2Exe-SetLanguage 0x0412
 ;@Ahk2Exe-SetMainIcon icon_normal.ico ; Default icon
-;@Ahk2Exe-SetProductName MCAutoClicker
+;@Ahk2Exe-SetProductName BlueStacksMultiClick
 
 ; Set tray icon stuff
-A_IconTip := "MCAutoClicker" ; Tray icon tip
+A_IconTip := "BlueStacksMultiClick" ; Tray icon tip
 ;@Ahk2Exe-IgnoreBegin
 TraySetIcon("icon_normal.ico")
 ;@Ahk2Exe-IgnoreEnd
@@ -35,33 +35,22 @@ MenuTraySub.Add("Reload Script`tR", ReloadScript)
 MenuTraySub.Add() ; Create separator
 MenuTraySub.Add("Suspend Script`tS", SuspendScript)
 ; Menu
-MenuTray.Add("&Hotkey List`tH", ShowHotkey)
-MenuTray.Default := "&Hotkey List`tH"
+MenuTray.Add("&Help`tH", ShowHelp)
+MenuTray.Default := "&Help`tH"
 MenuTray.Add() ; Create separator
 MenuTray.Add("Advanced Menu`tA", MenuTraySub)
 MenuTray.Add() ; Create separator
 MenuTray.Add("Exit Script`tX", ExitScript)
 
 ; Read INI file for settings
-beep := IniGet("General", "Beep", 0)
-click_interval := IniGet("Minecraft", "Click Interval", 1000)
-game_title := IniGet("Minecraft", "Window Title", "Minecraft")
-toggle_keep_click := False
-toggle_repeat_click := False
+window_title := IniGet("BlueStacks", "Window Title", "N64")
+click_key := GetKeyName(IniGet("BlueStacks", "Click Key", "Numpad0"))
+multiple_click_key := GetKeyName(IniGet("General", "Multiple Click Key", "NumpadDot"))
+press_interval := IniGet("General", "Multiple Click Interval", 100)
+press_count := IniGet("General", "Click Count", 2)
 
-minecraft_hwnd := "" ; Temporary variable because SetTimer can't execute function with parameter :(
-
-#HotIf WinExist(game_title)
-F10::
-{
-  ToggleClickRepeat()
-}
-XButton1::
-F11::
-{
-  ToggleClickKeep()
-}
-#HotIf
+; Hotkey
+Hotkey(multiple_click_key, SendMultipleClicks)
 
 ; Functions
 EditScript(ItemName, ItemPos, TheMenu) {
@@ -104,45 +93,24 @@ SuspendScript(ItemName, ItemPos, TheMenu) {
     }
   }
 }
-ShowHotkey(ItemName, ItemPos, TheMenu) {
-  ListHotkeys()
+ShowHelp(ItemName, ItemPos, TheMenu) {
+
 }
 ExitScript(ItemName, ItemPos, TheMenu) {
   ExitApp()
 }
-ToggleClickRepeat() {
-  global toggle_repeat_click, click_interval, minecraft_hwnd
-  if (toggle_repeat_click := !toggle_repeat_click) {
-    minecraft_hwnd := WinGetID(game_title)
-    SetTimer(ClickRepeat, click_interval)
-    ClickRepeat()
-  } else {
-    SetTimer(ClickRepeat, 0)
-  }
-}
-ClickRepeat() {
-  global beep, minecraft_hwnd
-  SetControlDelay(-1)
-  ControlClick(,"ahk_id " . minecraft_hwnd,,,,"NA")
-  if (beep = True) {
-    SoundBeep(1500)
-  }
-}
-ToggleClickKeep() {
-  global toggle_keep_click
-  if (toggle_keep_click := !toggle_keep_click) {
-    MouseClick("Left",,,,,"D")
-    SetTimer(ClickKeep, 100)
-  } else {
-    MouseClick("Left",,,,,"U")
-    SetTimer(ClickKeep, 0)
-  }
-}
-ClickKeep() {
-  global toggle_keep_click, game_title
-  current_window_title := WinGetTitle("A")
-  if (GetKeyState("LButton") and !GetKeyState("LButton", "P") and (current_window_title != game_title)) {
-    toggle_keep_click := !toggle_keep_click
-    MouseClick("Left",,,,,"U")
+SendMultipleClicks(HotkeyName) {
+  global window_title, press_interval, press_count, click_key
+  hwnd := WinExist(window_title . " ahk_exe HD-Player.exe")
+  if (hwnd) {
+    ; Comparing hwnd with WinActive(widow_title . " ahk_exe HD-Player.exe") fails. Why?
+    SetKeyDelay(press_interval)
+    delay := press_interval - 10
+    Loop(press_count) {
+      ; ControlSend doesn't work on BlueStacks
+      Send("{" . click_key . " down}")
+      Sleep(delay)
+      Send("{" . click_key . " up}")
+    }
   }
 }

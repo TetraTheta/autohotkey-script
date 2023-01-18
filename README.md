@@ -1,6 +1,7 @@
 # TetraAHK
 
-A collection of AHK scripts created by TetraTheta.  
-Each directory has its own README file, so see the corresponding README file for a detailed description.
+A collection of AHKv2 scripts created by TetraTheta.
 
-Some of the scripts are no longer functioning or contain old code. This is because the script is no longer in use and has not been updated. These scripts can be updated when used again in the future.
+Each directory contains its own README file.
+
+Some scripts are no longer functional and have been archived for historical purposes.
