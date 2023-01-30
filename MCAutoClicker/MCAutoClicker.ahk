@@ -45,7 +45,7 @@ MenuTray.Add("Exit Script`tX", ExitScript)
 ; Read INI file for settings
 beep := IniGet("General", "Beep", 0)
 click_interval := IniGet("Minecraft", "Click Interval", 1000)
-game_title := IniGet("Minecraft", "Window Title", "Minecraft")
+game_title := IniGet("Minecraft", "Window Title", "Minecraft* (version hidden from driver) - Multiplayer (3rd-party Server)")
 toggle_keep_click := False
 toggle_repeat_click := False
 
@@ -129,7 +129,11 @@ ClickRepeat() {
   }
 }
 ToggleClickKeep() {
-  global toggle_keep_click
+  global toggle_keep_click, game_title
+  if (WinGetTitle("A") != game_title) {
+    MouseClick("X1")
+    return
+  }
   if (toggle_keep_click := !toggle_keep_click) {
     MouseClick("Left",,,,,"D")
     SetTimer(ClickKeep, 100)
@@ -139,9 +143,8 @@ ToggleClickKeep() {
   }
 }
 ClickKeep() {
-  global toggle_keep_click, game_title
-  current_window_title := WinGetTitle("A")
-  if (GetKeyState("LButton") and !GetKeyState("LButton", "P") and (current_window_title != game_title)) {
+  global toggle_keep_click
+  if (GetKeyState("LButton") and !GetKeyState("LButton", "P")) {
     toggle_keep_click := !toggle_keep_click
     MouseClick("Left",,,,,"U")
   }
