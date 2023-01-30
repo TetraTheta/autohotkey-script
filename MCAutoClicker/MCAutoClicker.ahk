@@ -52,14 +52,15 @@ toggle_repeat_click := False
 minecraft_hwnd := "" ; Temporary variable because SetTimer can't execute function with parameter :(
 
 #HotIf WinExist(game_title)
+XButton1::
 F10::
 {
-  ToggleClickRepeat()
+  ToggleClickKeep()
 }
-XButton1::
+XButton2::
 F11::
 {
-  ToggleClickKeep()
+  ToggleClickRepeat()
 }
 #HotIf
 
@@ -110,14 +111,19 @@ ShowHotkey(ItemName, ItemPos, TheMenu) {
 ExitScript(ItemName, ItemPos, TheMenu) {
   ExitApp()
 }
+; Code related to click multiple times
 ToggleClickRepeat() {
   global toggle_repeat_click, click_interval, minecraft_hwnd
-  if (toggle_repeat_click := !toggle_repeat_click) {
+  if (toggle_repeat_click) {
+    ; toggle_repeat_click is On
+    toggle_repeat_click := False
+    SetTimer(ClickRepeat, 0)
+  } else {
+    ; toggle_repeat_click is Off
+    toggle_repeat_click := True
     minecraft_hwnd := WinGetID(game_title)
     SetTimer(ClickRepeat, click_interval)
     ClickRepeat()
-  } else {
-    SetTimer(ClickRepeat, 0)
   }
 }
 ClickRepeat() {
@@ -128,24 +134,21 @@ ClickRepeat() {
     SoundBeep(1500)
   }
 }
+; Code related to keep click state
 ToggleClickKeep() {
   global toggle_keep_click, game_title
   if (WinGetTitle("A") != game_title) {
-    MouseClick("X1")
+    Click("X1")
     return
-  }
-  if (toggle_keep_click := !toggle_keep_click) {
-    MouseClick("Left",,,,,"D")
-    SetTimer(ClickKeep, 100)
   } else {
-    MouseClick("Left",,,,,"U")
-    SetTimer(ClickKeep, 0)
-  }
-}
-ClickKeep() {
-  global toggle_keep_click
-  if (GetKeyState("LButton") and !GetKeyState("LButton", "P")) {
-    toggle_keep_click := !toggle_keep_click
-    MouseClick("Left",,,,,"U")
+    if (toggle_keep_click) {
+      ; toggle_keep_click is On
+      toggle_keep_click := False
+      Click("Left Up")
+    } else {
+      ; toggle_keep_click is Off
+      toggle_keep_click := True
+      Click("Left Down")
+    }
   }
 }
