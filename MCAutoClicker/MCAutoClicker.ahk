@@ -1,5 +1,5 @@
 ﻿/**
- * MCAutoClicker v2.0.0 : Auto clicker for Minecraft
+ * MCAutoClicker v2.0.1 : Auto clicker for Minecraft
  */
 #Requires AutoHotkey v2
 #Include "..\Lib\ini.ahk"
@@ -12,7 +12,7 @@ DetectHiddenWindows(True)
 ;@Ahk2Exe-SetCompanyName TetraTheta
 ;@Ahk2Exe-SetCopyright Copyright 2023. TetraTheta. All rights reserved.
 ;@Ahk2Exe-SetDescription Auto clicker for Minecraft
-;@Ahk2Exe-SetFileVersion 2.0.0.0
+;@Ahk2Exe-SetFileVersion 2.0.1.0
 ;@Ahk2Exe-SetLanguage 0x0412
 ;@Ahk2Exe-SetMainIcon icon_normal.ico ; Default icon
 ;@Ahk2Exe-SetProductName MCAutoClicker
