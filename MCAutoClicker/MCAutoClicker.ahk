@@ -137,7 +137,7 @@ ClickRepeat() {
 ; Code related to keep click state
 ToggleClickKeep() {
   global toggle_keep_click, game_title
-  if (WinGetTitle("A") != game_title) {
+  if (!InStr(WinGetTitle("A"), game_title) || !(WinGetProcessName("A") == "javaw.exe")) {
     Click("X1")
     return
   } else {
