@@ -6,7 +6,7 @@
 #SingleInstance Force
 
 ; Information about executable
-;@Ahk2Exe-AddResource icon_grey.ico, 160 ; Suspend icon
+;@Ahk2Exe-AddResource icon_grey.ico, 206 ; Suspend icon
 ;@Ahk2Exe-SetCompanyName TetraTheta
 ;@Ahk2Exe-SetCopyright Copyright 2023. TetraTheta. All rights reserved.
 ;@Ahk2Exe-SetDescription Type predefined text quickly with hotkey
@@ -118,7 +118,7 @@ SuspendScript(ItemName, ItemPos, TheMenu) {
     MenuTraySub.Rename("Suspend Script`tS", "Resume Script`tS")
     ; Change Icon
     if (A_IsCompiled) {
-      TraySetIcon("%A_ScriptFullPath%", -160)
+      TraySetIcon(A_ScriptFullPath, -206)
     } else {
       ;@Ahk2Exe-IgnoreBegin
       TraySetIcon("icon_grey.ico")
@@ -130,7 +130,7 @@ SuspendScript(ItemName, ItemPos, TheMenu) {
     MenuTraySub.Rename("Resume Script`tS", "Suspend Script`tS")
     ; Change Icon
     if (A_IsCompiled) {
-      TraySetIcon("%A_ScriptFullPath%", -159)
+      TraySetIcon(A_ScriptFullPath, -159)
     } else {
       ;@Ahk2Exe-IgnoreBegin
       TraySetIcon("icon_normal.ico")
