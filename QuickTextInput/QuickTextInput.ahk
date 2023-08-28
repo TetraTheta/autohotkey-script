@@ -174,7 +174,7 @@ ShowQuickText(ItemName, ItemPos, TheMenu) {
   QuickTextGUI.Show("w927 h402 AutoSize Restore")
 }
 EditQuickText(ItemName, ItemPos, TheMenu) {
-  RunWait("`"" . EDITOR . "`" `"" . A_ScriptDir . "\" . SCRIPT . ".ini`"")
+  RunWait("`"" . EDITOR . "`" `"" . GetIniPath() . "`"")
   Reload()
 }
 OpenMemoFile(ItemName, ItemPos, TheMenu) {
