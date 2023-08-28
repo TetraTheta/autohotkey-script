@@ -135,6 +135,8 @@ ShowHotStrings(ItemName, ItemPos, TheMenu) {
   for key, value in values {
     LV.Add(, key, value)
   }
+  LV.ModifyCol(1, "AutoHdr")
+  LV.ModifyCol(2, "AutoHdr")
   LV.Opt("+Redraw")
   HotstringsGUI.Show("w927 h402 AutoSize Restore")
 }
