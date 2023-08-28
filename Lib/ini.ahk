@@ -23,3 +23,6 @@ IniGet(Section, Key, DefaultValue)
   }
   return tempVar
 }
+GetIniPath() {
+  return A_ScriptDir . "\" . SCRIPT . ".ini"
+}
