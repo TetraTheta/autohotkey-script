@@ -51,24 +51,27 @@ if (LIMIT > 260) {
   LIMIT := 260
 }
 
-values := Map()
-loop Integer(LIMIT) {
-  ; Hard limit of loop is 260.
-  if A_Index > 260
-    break
-  identifier := Format("{:04}", A_Index)
-  hkey := GetAlphaNumber(A_Index)
-  key := IniGet("Hotstring List", identifier "-key", ";" hkey)
-  value := IniGet("Hotstring List", identifier "-value", " {left}")
-  values[key] := value
-}
+hotstrings := Map()
 
-for key, value in values {
-  ; Hotstrings will be immediately replaced
-  Hotstring(":*:" key, value, True)
-}
+RegisterHotstrings(LIMIT)
 
 ; Functions
+RegisterHotstrings(LIMIT) {
+  loop Integer(LIMIT) {
+    ; Hard limit of loop is 260.
+    if A_Index > 260
+      break
+    identifier := Format("{:04}", A_Index)
+    hkey := GetAlphaNumber(A_Index)
+    key := IniGet("Hotstring List", identifier "-key", ";" hkey)
+    value := IniGet("Hotstring List", identifier "-value", " {left}")
+    hotstrings[key] := value
+  }
+  for key, value in hotstrings {
+    ; Hotstrings will be immediately replaced
+    Hotstring(":*:" key, value, True)
+  }
+}
 GetAlphaNumber(num) {
   if (num >= 1 && num <= 260) {
     ab := "abcdefghijklmnopqrstuvwxyz"
@@ -126,13 +129,13 @@ SuspendScript(ItemName, ItemPos, TheMenu) {
   }
 }
 ShowHotStrings(ItemName, ItemPos, TheMenu) {
-  global values
+  global hotstrings
   ; Create GUI
   HotstringsGUI := Gui("+AlwaysOnTop -Resize -MinimizeBox -MaximizeBox", "Hotstring List")
   HotstringsGUI.SetFont("s12", "Malgun Gothic")
-  LV := HotstringsGUI.AddListView("R11 +Report -Multi +LV0x1 -LV0x10",["Trigger", "Replacement"])
+  LV := HotstringsGUI.AddListView("R11 +Report -Multi +LV0x1 -LV0x10", ["Trigger", "Replacement"])
   LV.Opt("-Redraw")
-  for key, value in values {
+  for key, value in hotstrings {
     LV.Add(, key, value)
   }
   LV.ModifyCol(1, "AutoHdr")
