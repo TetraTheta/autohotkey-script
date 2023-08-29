@@ -69,7 +69,7 @@ RegisterHotstrings(LIMIT) {
   }
   for key, value in hotstrings {
     ; Hotstrings will be immediately replaced
-    Hotstring(":*:" key, value, True)
+    Hotstring(":*:" . key, value, True)
   }
 }
 GetAlphaNumber(num) {
