@@ -45,20 +45,55 @@
 
     output := ""
     Loop num {
-      output .= "![](" . Format("{:03}", A_Index) . extension . ")`n`n`n`n"
+      output .= "![](" . Format("{:03}", A_Index) . "." . extension . ")`n`n`n`n"
     }
-    SendText(output)
+    
+    clipTemp := A_Clipboard
+    A_Clipboard := output
+    Send("^v")
+    Sleep(10)
+    A_Clipboard := clipTemp
   }
 }
-; Ctrl + G : Insert gallery/image with two sources
+; Ctrl + G : Insert gallery/image with two sources, with given numbers
 ^G::
+{
+  input := MyInputBox("Input first image name`nYou can omit extension and it will default to 'webp'.", "Markdown - Gallery Image (Two) Helper", , , "shell32.dll", 128)
+
+  if (input != "") {
+    if !(IsNumber(input)) {
+      MsgBox("Given file name cannot be batch processed.`nAborting.", "ERROR", "OK Iconx T3")
+      return
+    }
+    num := Number(input)
+
+    SendText("{{< gallery/image s1=`"" . Format("{:03}", num) . "`" s2=`"" . Format("{:03}", num+1) . "`" >}}")
+  }
+}
+; Ctrl + Shift + G : Insert gallery/image with three sources and caption
+^+G::
+{
+  input := MyInputBox("Input first image name`nYou can omit extension and it will default to 'webp'.", "Markdown - Gallery Image (Three) Helper", , , "shell32.dll", 128)
+
+  if (input != "") {
+    if !(IsNumber(input)) {
+      MsgBox("Given file name cannot be batch processed.`nAborting.", "ERROR", "OK Iconx T3")
+      return
+    }
+    num := Number(input)
+
+    SendText("{{< gallery/image s1=`"" . Format("{:03}", num) . "`" s2=`"" . Format("{:03}", num+1) . "`" s3=`"" . Format("{:03}", num+2) . "`" >}}")
+  }
+}
+; Win + G : Insert gallery/image with two sources
+#G::
 {
   SendText("{{< gallery/image s1=`"`" s2=`"`" >}}`n`n")
 }
-; Ctrl + Shit + G : Insert gallery/image with three sources and caption
-^+G::
+; Win + Shift + G : Insert gallery/image with three sources
+#+G::
 {
-  SendText("{{< gallery/image s1=`"`" s2=`"`" s3=`"`" caption=`"`" >}}`n`n")
+  SendText("{{< gallery/image s1=`"`" s2=`"`" s3=`"`" >}}`n`n")
 }
 ; Ctrl + Q : Insert NBSP
 ^Q::
@@ -83,6 +118,7 @@ MyInputBox(aPrompt := "", aTitle := A_ScriptName, aDefault := "", aTimeout := 10
   }
 
   MyGui.Opt("+AlwaysOnTop -MaximizeBox -MinimizeBox -Resize +OwnDialogs")
+  MyGui.OnEvent("Escape", (*) => (MyGui.Destroy()))
 
   Gui_Edit := MyGui.AddEdit("x5 y114 w358 h26 -Multi", aDefault)
   Gui_Button_OK := MyGui.AddButton("x51 y145 w88 h26 +Default", "OK")
