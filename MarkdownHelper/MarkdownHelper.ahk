@@ -41,7 +41,7 @@
 {
   res := SimpleInput("Markdown - Multiple Image Helper", "Input last image name.`nYou can omit extension and it will default to 'webp'.", , 319)
   if (res != "") {
-    num := 0
+    num := ""
     ext := "webp"
     if (!IsNumber(res)) {
       SplitPath(res, , , &ext, &num)
@@ -51,7 +51,7 @@
       }
       num := Number(num)
     } else {
-      num := Number(num)
+      num := Number(res)
     }
 
     output := ""
@@ -62,7 +62,7 @@
     clipTemp := A_Clipboard
     A_Clipboard := output
     Send("^v")
-    Sleep(10)
+    Sleep(20)
     A_Clipboard := clipTemp
   }
 }
@@ -116,7 +116,12 @@
   res := AdvInput("New Hugo Post", "Select new post's directory and its name", , 2)
 
   if (res[1] != "") {
-    args := A_ComSpec . " /c cd `"" . WorkingDir . "`" && npm run new " . res[2] . " " . res[1]
+    if (KeepConsole) {
+      cmdSwitch := "/k"
+    } else {
+      cmdSwitch := "/c"
+    }
+    args := A_ComSpec . " " . cmdSwitch . " cd `"" . WorkingDir . "`" && npm run new " . res[2] . " " . res[1]
     Run(args, WorkingDir)
   }
 }
@@ -124,6 +129,9 @@
 ; Variables
 ; ---------------------------------------------------------------------------
 WorkingDir := IniGet("Setting", "Blog Root", A_ScriptDir)
+KeepConsole := IniGet("Setting", "Keep Console Open", false)
+; Sanitize 'KeepConsole'
+KeepConsole := (IsNumber(KeepConsole) && KeepConsole == 0) ? 0 : 1
 ; ---------------------------------------------------------------------------
 ; Tray Icon & Menu
 ; ---------------------------------------------------------------------------
@@ -141,7 +149,7 @@ MenuTray.Default := "3&" ; Default action is 'Exit'
 ; ---------------------------------------------------------------------------
 ; Functions
 ; ---------------------------------------------------------------------------
-; SimpleInput: Show GUI and return value of Gui.Edit
+; SimpleInput : Show GUI and return value of Gui.Edit
 SimpleInput(aTitle := A_ScriptName, aMessage := "", aIconFile := "shell32.dll", aIconIndex := 1, aTimeout := 10) {
   ResEdit := ""
   
@@ -196,7 +204,7 @@ SimpleInput(aTitle := A_ScriptName, aMessage := "", aIconFile := "shell32.dll", 
     }
   }
 }
-; AdvInput: Show GUI and return value of Gui.Edit and Gui.DDL
+; AdvInput : Show GUI and return value of Gui.Edit and Gui.DDL
 AdvInput(aTitle := A_ScriptName, aMessage := "", aIconFile := "shell32.dll", aIconIndex := 1, aTimeout := 20) {
   DDL_Key := ["Blue Archive", "Chit Chat", "Default", "Game Misc", "Archon Quests (Genshin)", "Event Quests (Genshin)", "Genshin Misc", "Story Quests (Genshin)", "World Quests (Genshin)", "Honkai: Star Rail", "Minecraft", "Music", "The Division"]
   DDL_Val := ["blue-archive", "chit-chat", "default", "game-misc", "genshin-archon", "genshin-event", "genshin-misc", "genshin-story", "genshin-world", "honkai-star-rail", "minecraft", "music", "the-division"]
@@ -271,3 +279,13 @@ Shake(targetGui, aShakes := 20, aRattleX := 3, aRattleY := 3) {
   }
   targetGui.Move(oriX, oriY)
 }
+; ---------------------------------------------------------------------------
+; Event
+; ---------------------------------------------------------------------------
+; OnExit : Play ding sound when exit by #SingleInstance Force
+OnExitFunc(ExitReason, ExitCode) {
+  if (ExitReason == "Single" || ExitReason == "Reload") {
+    SoundPlay "*-48"
+  }
+}
+OnExit(OnExitFunc)
