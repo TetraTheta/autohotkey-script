@@ -81,7 +81,7 @@
 ; Ctrl + Shift + G : Insert gallery/image with three sources and caption
 ^+G::
 {
-  res := SimpleInput("Markdown - Gallery Image (Three) Helper", "Input first image name`nYou can omit extension and it will default to 'webp'.", , 128)
+  res := SimpleInput("Markdown - Gallery Image (Three) Helper", "Input first image name`nYou can omit extension and it will default to 'webp'.", , 319)
 
   if (res != "") {
     if !(IsNumber(res)) {
