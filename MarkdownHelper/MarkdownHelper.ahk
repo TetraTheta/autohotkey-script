@@ -59,11 +59,9 @@
       output .= "![](" . Format("{:03}", A_Index) . "." . ext . ")`n`n`n`n"
     }
 
-    clipTemp := A_Clipboard
     A_Clipboard := output
+    Sleep(10)
     Send("^v")
-    Sleep(20)
-    A_Clipboard := clipTemp
   }
 }
 ; Ctrl + G : Insert gallery/image with two sources, with given numbers
@@ -206,8 +204,8 @@ SimpleInput(aTitle := A_ScriptName, aMessage := "", aIconFile := "shell32.dll", 
 }
 ; AdvInput : Show GUI and return value of Gui.Edit and Gui.DDL
 AdvInput(aTitle := A_ScriptName, aMessage := "", aIconFile := "shell32.dll", aIconIndex := 1, aTimeout := 20) {
-  DDL_Key := ["Blue Archive", "Chit Chat", "Default", "Game Misc", "Archon Quests (Genshin)", "Event Quests (Genshin)", "Genshin Misc", "Story Quests (Genshin)", "World Quests (Genshin)", "Honkai: Star Rail", "Minecraft", "Music", "The Division"]
-  DDL_Val := ["blue-archive", "chit-chat", "default", "game-misc", "genshin-archon", "genshin-event", "genshin-misc", "genshin-story", "genshin-world", "honkai-star-rail", "minecraft", "music", "the-division"]
+  DDL_Key := ["Archon Quests (Genshin)", "Blue Archive", "Chit Chat", "Default", "Event Quests (Genshin)", "Game Misc", "Genshin Misc", "Honkai: Star Rail", "Minecraft", "Music", "Story Quests (Genshin)", "The Division", "World Quests (Genshin)"]
+  DDL_Val := ["genshin-archon", "blue-archive", "chit-chat", "default", "genshin-event", "game-misc", "genshin-misc", "honkai-star-rail", "minecraft", "music", "genshin-story", "the-division", "genshin-world"]
 
   ResEdit := ""
   ResDDL := ""
