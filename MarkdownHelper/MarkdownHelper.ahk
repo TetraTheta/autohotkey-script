@@ -1,7 +1,7 @@
 /**
  * MarkdownHelper v1.0.0 : My Hugo Blog Markdown Helper
  */
-#Requires AutoHotkey v2.0.10
+#Requires AutoHotkey v2.0
 #Include "..\Lib\ini.ahk"
 #SingleInstance Force
 
@@ -126,24 +126,58 @@
 ; ---------------------------------------------------------------------------
 ; Variables
 ; ---------------------------------------------------------------------------
-WorkingDir := IniGet("Setting", "Blog Root", A_ScriptDir)
+WorkingDir := IniGet("Setting", "Blog Repository Root", A_ScriptDir)
 KeepConsole := IniGet("Setting", "Keep Console Open", false)
 ; Sanitize 'KeepConsole'
 KeepConsole := (IsNumber(KeepConsole) && KeepConsole == 0) ? 0 : 1
+ExplorerExec := IniGet("Open Explorer", "Executable", "explorer.exe")
+ExplorerArgs := IniGet("Open Explorer", "Arguments", "")
+TestServerDir := IniGet("Start Hugo Test Server", "Start Directory", "")
+TestServerExec := IniGet("Start Hugo Test Server", "Executable", "")
+TestServerArgs := IniGet("Start Hugo Test Server", "Arguments", "")
+TestPageExec := IniGet("Open Test Page", "Browser Executable", "firefox.exe")
+TestPageArgs := IniGet("Open Test Page", "Arguments", "")
 ; ---------------------------------------------------------------------------
-; Tray Icon & Menu
+; Tray Icon & Menu (+functions)
 ; ---------------------------------------------------------------------------
 A_IconTip := "MarkdownHelper" ; Tray icon tip
 ;@Ahk2Exe-IgnoreBegin
 TraySetIcon("icon_normal.ico")
 ;@Ahk2Exe-IgnoreEnd
 MenuTray := A_TrayMenu
+MenuTray.Delete() ; Reset tray menu
+MenuTray.Add("Open &Explorer`tE", OpenExplorer)
+MenuTray.Add("Start Hugo Test &Server`tS", RunServer)
+MenuTray.Add("Open Test &Page`tP", OpenPage)
+MenuTray.Add()
+MenuTray.AddStandard()
+; Modify keyboard shortcut of standard menu items
 ;@Ahk2Exe-IgnoreBegin
-MenuTray.Default := "10&" ; Default action is 'Exit'
+MenuTray.Rename("&Open", "Open")
+MenuTray.Rename("&Help", "Help")
+MenuTray.Rename("&Window Spy", "Window Spy")
+MenuTray.Rename("&Reload Script", "Reload Script")
+MenuTray.Rename("&Edit Script", "Edit Script")
 ;@Ahk2Exe-IgnoreEnd
-/*@Ahk2Exe-Keep
-MenuTray.Default := "3&" ; Default action is 'Exit'
-*/
+MenuTray.Rename("&Suspend Hotkeys", "Suspend Hotkeys")
+MenuTray.Rename("&Pause Script", "Pause Script")
+MenuTray.Rename("E&xit", "E&xit`tX")
+; Set default entry
+MenuTray.Default := "E&xit`tX" ; Default action is 'Exit'
+; Set menu item icon
+MenuTray.SetIcon("Open &Explorer`tE", "imageres.dll", 4)
+MenuTray.SetIcon("Start Hugo Test &Server`tS", "imageres.dll", 264)
+MenuTray.SetIcon("Open Test &Page`tP", "netshell.dll", 86)
+; Menu function
+OpenExplorer(ItemName, ItemPos, MyMenu) {
+  Run("`"" . ExplorerExec . "`" " . ExplorerArgs)
+}
+RunServer(ItemName, ItemPos, MyMenu) {
+  Run("`"" . TestServerExec . "`" " . TestServerArgs, TestServerDir)
+}
+OpenPage(ItemName, ItemPos, MyMenu) {
+  Run("`"" . TestPageExec . "`" " . TestPageArgs)
+}
 ; ---------------------------------------------------------------------------
 ; Functions
 ; ---------------------------------------------------------------------------
@@ -203,7 +237,7 @@ SimpleInput(aTitle := A_ScriptName, aMessage := "", aIconFile := "shell32.dll", 
   }
 }
 ; AdvInput : Show GUI and return value of Gui.Edit and Gui.DDL
-AdvInput(aTitle := A_ScriptName, aMessage := "", aIconFile := "shell32.dll", aIconIndex := 1, aTimeout := 20) {
+AdvInput(aTitle := A_ScriptName, aMessage := "", aIconFile := "shell32.dll", aIconIndex := 1, aTimeout := 30) {
   DDL_Key := ["Archon Quests (Genshin)", "Blue Archive", "Chit Chat", "Default", "Event Quests (Genshin)", "Game Misc", "Genshin Misc", "Honkai: Star Rail", "Minecraft", "Music", "Story Quests (Genshin)", "The Division", "World Quests (Genshin)"]
   DDL_Val := ["genshin-archon", "blue-archive", "chit-chat", "default", "genshin-event", "game-misc", "genshin-misc", "honkai-star-rail", "minecraft", "music", "genshin-story", "the-division", "genshin-world"]
 
@@ -229,9 +263,12 @@ AdvInput(aTitle := A_ScriptName, aMessage := "", aIconFile := "shell32.dll", aIc
   Gui_BtnOK := MyGui.AddButton("x166 y129 w75 h23 +Default", "OK")
   Gui_Edit := MyGui.AddEdit("x12 y102 w310 h21 -Multi")
   Gui_Icon := MyGui.AddPicture("x12 y12 w32 h-1 Icon" . aIconIndex, aIconFile)
-  Gui_Msg := MyGui.AddText("x50 y12 w272 h87", aMessage)
+  Gui_Msg := MyGui.AddText("x50 y12 w272 h83", aMessage)
   Gui_Timer := MyGui.AddText("x20 y47 w17 h12", Format("{:02}", aTimeout))
-  Gui_DDL := MyGui.AddDropDownList("x12 y76 w310 h20 vPostDir Choose3 R13", DDL_Key)
+  Gui_DDL := MyGui.AddDropDownList("x12 y72 w310 h20 vPostDir Choose3 R200", DDL_Key)
+  
+  ; Increase font size of DDL
+  Gui_DDL.SetFont("s14")
   
   ; GUI event
   Gui_BtnOK.OnEvent("Click", (*) => (
