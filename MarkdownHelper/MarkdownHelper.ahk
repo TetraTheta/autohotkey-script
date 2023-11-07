@@ -9,7 +9,7 @@
 ;@Ahk2Exe-SetCompanyName TetraTheta
 ;@Ahk2Exe-SetCopyright Copyright 2023. TetraTheta. All rights reserved.
 ;@Ahk2Exe-SetDescription My Hugo Blog Markdown Helper
-;@Ahk2Exe-SetFileVersion 1.0.0.0
+;@Ahk2Exe-SetFileVersion 1.1.0.0
 ;@Ahk2Exe-SetLanguage 0x0412
 ;@Ahk2Exe-SetMainIcon icon_normal.ico ; Default icon
 ;@Ahk2Exe-SetProductName MarkdownHelper
@@ -111,9 +111,12 @@
 ; Ctrl + Alt + N : New Post
 ^!N::
 {
-  res := AdvInput("New Hugo Post", "Select new post's directory and its name", , 2)
+  global LastIndex
+  res := AdvInput("New Hugo Post", "Select new post's directory and its name", LastIndex, , 2)
 
   if (res[1] != "") {
+    LastIndex := res[3]
+    IniWrite(LastIndex, GetIniPath(), "New Post", "Last Index")
     if (KeepConsole) {
       cmdSwitch := "/k"
     } else {
@@ -126,10 +129,9 @@
 ; ---------------------------------------------------------------------------
 ; Variables
 ; ---------------------------------------------------------------------------
+; Config variables
 WorkingDir := IniGet("Setting", "Blog Repository Root", A_ScriptDir)
 KeepConsole := IniGet("Setting", "Keep Console Open", false)
-; Sanitize 'KeepConsole'
-KeepConsole := (IsNumber(KeepConsole) && KeepConsole == 0) ? 0 : 1
 ExplorerExec := IniGet("Open Explorer", "Executable", "explorer.exe")
 ExplorerArgs := IniGet("Open Explorer", "Arguments", "")
 TestServerDir := IniGet("Start Hugo Test Server", "Start Directory", "")
@@ -137,6 +139,11 @@ TestServerExec := IniGet("Start Hugo Test Server", "Executable", "")
 TestServerArgs := IniGet("Start Hugo Test Server", "Arguments", "")
 TestPageExec := IniGet("Open Test Page", "Browser Executable", "firefox.exe")
 TestPageArgs := IniGet("Open Test Page", "Arguments", "")
+; Runtime variables (will be written back to INI)
+LastIndex := IniGet("New Post", "Last Index", "3")
+; Sanitize variables
+KeepConsole := (IsNumber(KeepConsole) && KeepConsole == 0) ? 0 : 1
+LastIndex := IsNumber(LastIndex) ? Number(LastIndex) : 3
 ; ---------------------------------------------------------------------------
 ; Tray Icon & Menu (+functions)
 ; ---------------------------------------------------------------------------
@@ -237,12 +244,13 @@ SimpleInput(aTitle := A_ScriptName, aMessage := "", aIconFile := "shell32.dll", 
   }
 }
 ; AdvInput : Show GUI and return value of Gui.Edit and Gui.DDL
-AdvInput(aTitle := A_ScriptName, aMessage := "", aIconFile := "shell32.dll", aIconIndex := 1, aTimeout := 30) {
+AdvInput(aTitle := A_ScriptName, aMessage := "", aDDLIndex := 3, aIconFile := "shell32.dll", aIconIndex := 1, aTimeout := 30) {
   DDL_Key := ["Archon Quests (Genshin)", "Blue Archive", "Chit Chat", "Default", "Event Quests (Genshin)", "Game Misc", "Genshin Misc", "Honkai: Star Rail", "Minecraft", "Music", "Story Quests (Genshin)", "The Division", "World Quests (Genshin)"]
   DDL_Val := ["genshin-archon", "blue-archive", "chit-chat", "default", "genshin-event", "game-misc", "genshin-misc", "honkai-star-rail", "minecraft", "music", "genshin-story", "the-division", "genshin-world"]
 
   ResEdit := ""
   ResDDL := ""
+  ResDDLIndex := aDDLIndex
   
   ; Set GUI icon (hack)
   TraySetIcon(aIconFile, aIconIndex)
@@ -265,7 +273,7 @@ AdvInput(aTitle := A_ScriptName, aMessage := "", aIconFile := "shell32.dll", aIc
   Gui_Icon := MyGui.AddPicture("x12 y12 w32 h-1 Icon" . aIconIndex, aIconFile)
   Gui_Msg := MyGui.AddText("x50 y12 w272 h83", aMessage)
   Gui_Timer := MyGui.AddText("x20 y47 w17 h12", Format("{:02}", aTimeout))
-  Gui_DDL := MyGui.AddDropDownList("x12 y72 w310 h20 vPostDir Choose3 R200", DDL_Key)
+  Gui_DDL := MyGui.AddDropDownList("x12 y72 w310 h20 vPostDir Choose" . aDDLIndex . " R200", DDL_Key)
   
   ; Increase font size of DDL
   Gui_DDL.SetFont("s14")
@@ -273,7 +281,7 @@ AdvInput(aTitle := A_ScriptName, aMessage := "", aIconFile := "shell32.dll", aIc
   ; GUI event
   Gui_BtnOK.OnEvent("Click", (*) => (
     (Gui_Edit.Value == "") ? (Shake(MyGui)) : (
-      ResEdit := Gui_Edit.Value, ResDDL := DDL_Val[Gui_DDL.Value], MyGui.Destroy()
+      ResEdit := Gui_Edit.Value, ResDDL := DDL_Val[Gui_DDL.Value], ResDDLIndex := Gui_DDL.Value, MyGui.Destroy()
     )
   ))
   Gui_BtnCancel.OnEvent("Click", (*) => (MyGui.Destroy()))
@@ -286,7 +294,7 @@ AdvInput(aTitle := A_ScriptName, aMessage := "", aIconFile := "shell32.dll", aIc
   GuiHwnd := MyGui.hwnd
   SetTimer(CountDown, 1000)
   WinWaitClose(GuiHwnd)
-  return [ResEdit, ResDDL]
+  return [ResEdit, ResDDL, ResDDLIndex]
   
   CountDown() {
     if (WinExist("ahk_id" GuiHwnd)) {
