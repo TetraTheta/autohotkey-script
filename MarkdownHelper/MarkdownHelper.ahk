@@ -111,12 +111,14 @@
 ; Ctrl + Alt + N : New Post
 ^!N::
 {
-  global LastIndex
-  res := AdvInput("New Hugo Post", "Select new post's directory and its name", LastIndex, , 2)
+  global LastIndex, LastTitle
+  res := AdvInput("New Hugo Post", "Select new post's directory and its name", LastIndex, LastTitle, , 2)
 
   if (res[1] != "") {
     LastIndex := res[3]
+    LastTitle := res[1]
     IniWrite(LastIndex, GetIniPath(), "New Post", "Last Index")
+    IniWrite(LastTitle, GetIniPath(), "New Post", "Last Title")
     if (KeepConsole) {
       cmdSwitch := "/k"
     } else {
@@ -141,6 +143,7 @@ TestPageExec := IniGet("Open Test Page", "Browser Executable", "firefox.exe")
 TestPageArgs := IniGet("Open Test Page", "Arguments", "")
 ; Runtime variables (will be written back to INI)
 LastIndex := IniGet("New Post", "Last Index", "3")
+LastTitle := IniGet("New Post", "Last Title", "")
 ; Sanitize variables
 KeepConsole := (IsNumber(KeepConsole) && KeepConsole == 0) ? 0 : 1
 LastIndex := IsNumber(LastIndex) ? Number(LastIndex) : 3
@@ -244,7 +247,7 @@ SimpleInput(aTitle := A_ScriptName, aMessage := "", aIconFile := "shell32.dll", 
   }
 }
 ; AdvInput : Show GUI and return value of Gui.Edit and Gui.DDL
-AdvInput(aTitle := A_ScriptName, aMessage := "", aDDLIndex := 3, aIconFile := "shell32.dll", aIconIndex := 1, aTimeout := 30) {
+AdvInput(aTitle := A_ScriptName, aMessage := "", aDDLIndex := 3, aEditDefault := "", aIconFile := "shell32.dll", aIconIndex := 1, aTimeout := 30) {
   DDL_Key := ["Archon Quests (Genshin)", "Blue Archive", "Chit Chat", "Default", "Event Quests (Genshin)", "Game Misc", "Genshin Misc", "Honkai: Star Rail", "Minecraft", "Music", "Story Quests (Genshin)", "The Division", "World Quests (Genshin)"]
   DDL_Val := ["genshin-archon", "blue-archive", "chit-chat", "default", "genshin-event", "game-misc", "genshin-misc", "honkai-star-rail", "minecraft", "music", "genshin-story", "the-division", "genshin-world"]
 
@@ -269,7 +272,7 @@ AdvInput(aTitle := A_ScriptName, aMessage := "", aDDLIndex := 3, aIconFile := "s
   ; GUI elements
   Gui_BtnCancel := MyGui.AddButton("x247 y129 w75 h23", "Cancel")
   Gui_BtnOK := MyGui.AddButton("x166 y129 w75 h23 +Default", "OK")
-  Gui_Edit := MyGui.AddEdit("x12 y102 w310 h21 -Multi")
+  Gui_Edit := MyGui.AddEdit("x12 y102 w310 h21 -Multi", aEditDefault)
   Gui_Icon := MyGui.AddPicture("x12 y12 w32 h-1 Icon" . aIconIndex, aIconFile)
   Gui_Msg := MyGui.AddText("x50 y12 w272 h83", aMessage)
   Gui_Timer := MyGui.AddText("x20 y47 w17 h12", Format("{:02}", aTimeout))
