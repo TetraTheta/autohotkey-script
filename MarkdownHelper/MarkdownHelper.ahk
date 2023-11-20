@@ -14,6 +14,10 @@
 ;@Ahk2Exe-SetMainIcon icon_normal.ico ; Default icon
 ;@Ahk2Exe-SetProductName MarkdownHelper
 
+; Hack - Fix tray menu not recognizing keyboard input
+WinActivate A_ScriptHwnd
+Send "{Alt Up}"
+
 ; ---------------------------------------------------------------------------
 ; Hotkeys
 ; ---------------------------------------------------------------------------
