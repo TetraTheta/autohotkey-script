@@ -19,7 +19,7 @@ WinActivate A_ScriptHwnd
 Send "{Alt Up}"
 
 ; ---------------------------------------------------------------------------
-; Hotkeys
+; Hotkey
 ; ---------------------------------------------------------------------------
 ; Ctrl + B : 「」
 ^B::
@@ -79,7 +79,7 @@ Send "{Alt Up}"
     }
     num := Number(res)
 
-    SendText("{{< gallery/image src=`"" . Format("{:03}", num) . ":" . Format("{:03}", num+1) . "`" >}}`n`n")
+    SendText("{{< gallery/image src=`"" . Format("{:03}", num) . ":" . Format("{:03}", num + 1) . "`" >}}`n`n")
   }
 }
 ; Ctrl + Shift + G : Insert gallery/image with three sources and caption
@@ -94,7 +94,7 @@ Send "{Alt Up}"
     }
     num := Number(res)
 
-    SendText("{{< gallery/image src=`"" . Format("{:03}", num) . ":" . Format("{:03}", num+1) . ":" . Format("{:03}", num+2) . "`" >}}`n`n")
+    SendText("{{< gallery/image src=`"" . Format("{:03}", num) . ":" . Format("{:03}", num + 1) . ":" . Format("{:03}", num + 2) . "`" >}}`n`n")
   }
 }
 ; Win + G : Insert gallery/image with two sources
@@ -133,7 +133,7 @@ Send "{Alt Up}"
   }
 }
 ; ---------------------------------------------------------------------------
-; Variables
+; Variable
 ; ---------------------------------------------------------------------------
 ; Config variables
 WorkingDir := IniGet("Setting", "Blog Repository Root", A_ScriptDir)
@@ -192,19 +192,15 @@ RunServer(ItemName, ItemPos, MyMenu) {
 OpenPage(ItemName, ItemPos, MyMenu) {
   Run("`"" . TestPageExec . "`" " . TestPageArgs)
 }
-; Enable dark mode
-uxtheme := DllCall("GetModuleHandle", "str", "uxtheme", "ptr")
-SetPreferredAppMode := DllCall("GetProcAddress", "ptr", uxtheme, "ptr", 135, "ptr")
-FlushMenuThemes := DllCall("GetProcAddress", "ptr", uxtheme, "ptr", 136, "ptr")
-DllCall(SetPreferredAppMode, "int", 1)
-DllCall(FlushMenuThemes)
+; Dark Context Menu
+SetMenuAttr(MenuTray)
 ; ---------------------------------------------------------------------------
-; Functions
+; Function
 ; ---------------------------------------------------------------------------
 ; SimpleInput : Show GUI and return value of Gui.Edit
 SimpleInput(aTitle := A_ScriptName, aMessage := "", aIconFile := "shell32.dll", aIconIndex := 1, aTimeout := 10) {
   ResEdit := ""
-  
+
   ; Set GUI icon (hack)
   TraySetIcon(aIconFile, aIconIndex)
   MyGui := Gui(, aTitle)
@@ -214,11 +210,11 @@ SimpleInput(aTitle := A_ScriptName, aMessage := "", aIconFile := "shell32.dll", 
   ;@Ahk2Exe-IgnoreBegin
   TraySetIcon("icon_normal.ico")
   ;@Ahk2Exe-IgnoreEnd
-  
+
   ; GUI option
   MyGui.Opt("+AlwaysOnTop -MaximizeBox -MinimizeBox -Resize +OwnDialogs")
   MyGui.OnEvent("Escape", (*) => (MyGui.Destroy()))
-  
+
   ; GUI elements
   Gui_BtnCancel := MyGui.AddButton("x247 y129 w75 h23", "Cancel")
   Gui_BtnOK := MyGui.AddButton("x166 y129 w75 h23 +Default", "OK")
@@ -226,7 +222,7 @@ SimpleInput(aTitle := A_ScriptName, aMessage := "", aIconFile := "shell32.dll", 
   Gui_Icon := MyGui.AddPicture("x12 y12 w32 h-1 Icon" . aIconIndex, aIconFile)
   Gui_Msg := MyGui.AddText("x50 y12 w272 h87", aMessage)
   Gui_Timer := MyGui.AddText("x20 y47 w17 h12", Format("{:02}", aTimeout))
-  
+
   ; GUI event
   Gui_BtnOK.OnEvent("Click", (*) => (
     (Gui_Edit.Value == "") ? (Shake(MyGui)) : (
@@ -234,17 +230,21 @@ SimpleInput(aTitle := A_ScriptName, aMessage := "", aIconFile := "shell32.dll", 
     )
   ))
   Gui_BtnCancel.OnEvent("Click", (*) => (MyGui.Destroy()))
-  
+
+  ; Dark mode
+  SetWinAttr(MyGui)
+  SetWinTheme(MyGui)
+
   ; Show GUI
   MyGui.Show("AutoSize Center")
   Gui_Edit.Focus()
-  
+
   ; Start timer
   GuiHwnd := MyGui.hwnd
   SetTimer(CountDown, 1000)
   WinWaitClose(GuiHwnd)
   return ResEdit
-  
+
   CountDown() {
     if (WinExist("ahk_id" GuiHwnd)) {
       Gui_Timer.Text := Format("{:02}", --aTimeout)
@@ -264,7 +264,7 @@ AdvInput(aTitle := A_ScriptName, aMessage := "", aDDLIndex := 3, aEditDefault :=
   ResEdit := ""
   ResDDL := ""
   ResDDLIndex := aDDLIndex
-  
+
   ; Set GUI icon (hack)
   TraySetIcon(aIconFile, aIconIndex)
   MyGui := Gui(, aTitle)
@@ -274,11 +274,11 @@ AdvInput(aTitle := A_ScriptName, aMessage := "", aDDLIndex := 3, aEditDefault :=
   ;@Ahk2Exe-IgnoreBegin
   TraySetIcon("icon_normal.ico")
   ;@Ahk2Exe-IgnoreEnd
-  
+
   ; GUI option
   MyGui.Opt("+AlwaysOnTop -MaximizeBox -MinimizeBox -Resize +OwnDialogs")
   MyGui.OnEvent("Escape", (*) => (MyGui.Destroy()))
-  
+
   ; GUI elements
   Gui_BtnCancel := MyGui.AddButton("x247 y129 w75 h23", "Cancel")
   Gui_BtnOK := MyGui.AddButton("x166 y129 w75 h23 +Default", "OK")
@@ -287,10 +287,10 @@ AdvInput(aTitle := A_ScriptName, aMessage := "", aDDLIndex := 3, aEditDefault :=
   Gui_Msg := MyGui.AddText("x50 y12 w272 h83", aMessage)
   Gui_Timer := MyGui.AddText("x20 y47 w17 h12", Format("{:02}", aTimeout))
   Gui_DDL := MyGui.AddDropDownList("x12 y72 w310 h20 vPostDir Choose" . aDDLIndex . " R200", DDL_Key)
-  
+
   ; Increase font size of DDL
   Gui_DDL.SetFont("s14")
-  
+
   ; GUI event
   Gui_BtnOK.OnEvent("Click", (*) => (
     (Gui_Edit.Value == "") ? (Shake(MyGui)) : (
@@ -298,17 +298,21 @@ AdvInput(aTitle := A_ScriptName, aMessage := "", aDDLIndex := 3, aEditDefault :=
     )
   ))
   Gui_BtnCancel.OnEvent("Click", (*) => (MyGui.Destroy()))
-  
+
+  ; Dark mode
+  SetWinAttr(MyGui)
+  SetWinTheme(MyGui)
+
   ; Show GUI
   MyGui.Show("AutoSize Center")
   Gui_Edit.Focus()
-  
+
   ; Start timer
   GuiHwnd := MyGui.hwnd
   SetTimer(CountDown, 1000)
   WinWaitClose(GuiHwnd)
   return [ResEdit, ResDDL, ResDDLIndex]
-  
+
   CountDown() {
     if (WinExist("ahk_id" GuiHwnd)) {
       Gui_Timer.Text := Format("{:02}", --aTimeout)
@@ -334,6 +338,141 @@ Shake(targetGui, aShakes := 20, aRattleX := 3, aRattleY := 3) {
     Sleep(10)
   }
   targetGui.Move(oriX, oriY)
+}
+; ---------------------------------------------------------------------------
+; Dark Mode Function
+; ---------------------------------------------------------------------------
+; Source: https://www.autohotkey.com/boards/viewtopic.php?t=115952
+DarkColors := Map("Background", "0x202020", "Controls", "0x404040", "Font", "0xE0E0E0")
+TextBGBrush := DllCall("gdi32\CreateSolidBrush", "UInt", DarkColors["Background"], "Ptr")
+SetMenuAttr(MenuObj) {
+  global DarkColors
+  if (VerCompare(A_OSVersion, "10.0.17763") >= 0) {
+    DWMWA_USE_IMMERSIVE_DARK_MODE := 19
+    if (VerCompare(A_OSVersion, "10.0.18985") >= 0) {
+      DWMWA_USE_IMMERSIVE_DARK_MODE := 20
+    }
+    uxtheme := DllCall("kernel32\GetModuleHandle", "Str", "uxtheme", "Ptr")
+    SetPreferredAppMode := DllCall("kernel32\GetProcAddress", "Ptr", uxtheme, "Ptr", 135, "Ptr")
+    FlushMenuThemes := DllCall("kernel32\GetProcAddress", "Ptr", uxtheme, "Ptr", 136, "Ptr")
+
+    DllCall("dwmapi\DwmSetWindowAttribute", "Ptr", A_ScriptHwnd, "Int", DWMWA_USE_IMMERSIVE_DARK_MODE, "Int*", True, "Int", 4)
+    DllCall(SetPreferredAppMode, "Int", 2) ; 0=Default, 1=AllowDark, 2=ForceDark, 3=ForceLight, 4=Max
+    DllCall(FlushMenuThemes)
+  }
+}
+SetWinAttr(GuiObj) {
+  global DarkColors
+  if (VerCompare(A_OSVersion, "10.0.17763") >= 0) {
+    DWMWA_USE_IMMERSIVE_DARK_MODE := 19
+    if (VerCompare(A_OSVersion, "10.0.18985") >= 0) {
+      DWMWA_USE_IMMERSIVE_DARK_MODE := 20
+    }
+    uxtheme := DllCall("kernel32\GetModuleHandle", "Str", "uxtheme", "Ptr")
+    SetPreferredAppMode := DllCall("kernel32\GetProcAddress", "Ptr", uxtheme, "Ptr", 135, "Ptr")
+    FlushMenuThemes := DllCall("kernel32\GetProcAddress", "Ptr", uxtheme, "Ptr", 136, "Ptr")
+
+    DllCall("dwmapi\DwmSetWindowAttribute", "Ptr", GuiObj.Hwnd, "Int", DWMWA_USE_IMMERSIVE_DARK_MODE, "Int*", True, "Int", 4)
+    DllCall(SetPreferredAppMode, "Int", 2) ; 0=Default, 1=AllowDark, 2=ForceDark, 3=ForceLight, 4=Max
+    DllCall(FlushMenuThemes)
+    GuiObj.BackColor := DarkColors["Background"]
+  }
+}
+SetWinTheme(GuiObj) {
+  static GWL_WNDPROC := -4
+  static GWL_STYLE := -16
+  static ES_MULTILINE := 0x0004
+  static LVM_GETTEXTCOLOR := 0x1023
+  static LVM_SETTEXTCOLOR := 0x1024
+  static LVM_GETTEXTBKCOLOR := 0x1025
+  static LVM_SETTEXTBKCOLOR := 0x1026
+  static LVM_GETBKCOLOR := 0x1000
+  static LVM_SETBKCOLOR := 0x1001
+  static LVM_GETHEADER := 0x101F
+  static GetWindowLong := A_PtrSize = 8 ? "GetWindowLongPtr" : "GetWindowLong"
+  static SetWindowLong := A_PtrSize = 8 ? "SetWindowLongPtr" : "SetWindowLong"
+  Init := False
+  LV_Init := False
+
+  Mode_Explorer := "DarkMode_Explorer"
+  Mode_CFD := "DarkMode_CFD"
+  Mode_ItemsView := "DarkMode_ItemsView"
+
+  for hWnd, GuiCtrlObj in GuiObj {
+    switch GuiCtrlObj.Type {
+      case "Button", "CheckBox", "ListBox", "UpDown", "Text":
+      {
+        DllCall("uxtheme\SetWindowTheme", "Ptr", GuiCtrlObj.hWnd, "Str", Mode_Explorer, "Ptr", 0)
+      }
+      case "ComboBox", "DDL":
+      {
+        DllCall("uxtheme\SetWindowTheme", "Ptr", GuiCtrlObj.hWnd, "Str", Mode_CFD, "Ptr", 0)
+      }
+      case "Edit":
+      {
+        if (DllCall("user32\" . GetWindowLong, "Ptr", GuiCtrlObj.hWnd, "Int", GWL_STYLE) & ES_MULTILINE) {
+          DllCall("uxtheme\SetWindowTheme", "Ptr", GuiCtrlObj.hWnd, "Str", Mode_Explorer, "Ptr", 0)
+        } else {
+          DllCall("uxtheme\SetWindowTheme", "Ptr", GuiCtrlObj.hWnd, "Str", Mode_CFD, "Ptr", 0)
+        }
+      }
+      case "ListView":
+      {
+        if !(LV_Init) {
+          static LV_TEXTCOLOR := SendMessage(LVM_GETTEXTCOLOR, 0, 0, GuiCtrlObj.hWnd)
+          static LV_TEXTBKCOLOR := SendMessage(LVM_GETTEXTBKCOLOR, 0, 0, GuiCtrlObj.hWnd)
+          static LV_BKCOLOR := SendMessage(LVM_GETBKCOLOR, 0, 0, GuiCtrlObj.hWnd)
+          LV_Init := True
+        }
+        GuiCtrlObj.Opt("-Redraw")
+        SendMessage(LVM_SETTEXTCOLOR, 0, DarkColors["Font"], GuiCtrlObj.hWnd)
+        SendMessage(LVM_SETTEXTBKCOLOR, 0, DarkColors["Background"], GuiCtrlObj.hWnd)
+        SendMessage(LVM_SETBKCOLOR, 0, DarkColors["Background"], GuiCtrlObj.hWnd)
+        DllCall("uxtheme\SetWindowTheme", "Ptr", GuiCtrlObj.hWnd, "Str", Mode_Explorer, "Ptr", 0)
+        ; To color the selection - scrollbar turns back to normal
+        ;DllCall("uxtheme\SetWindowTheme", "Ptr", GuiCtrlObj.hWnd, "Str", Mode_ItemsView, "Ptr", 0)
+        LV_Header := SendMessage(LVM_GETHEADER, 0, 0, GuiCtrlObj.hWnd)
+        DllCall("uxtheme\SetWindowTheme", "Ptr", LV_Header, "Str", Mode_ItemsView, "Ptr", 0)
+        GuiCtrlObj.Opt("+Redraw")
+      }
+    }
+  }
+  if !(Init) {
+    ; https://www.autohotkey.com/docs/v2/lib/CallbackCreate.htm#ExSubclassGUI
+    global WindowProcNew := CallbackCreate(WindowProc)  ; Avoid fast-mode for subclassing.
+    global WindowProcOld := DllCall("user32\" . SetWindowLong, "Ptr", GuiObj.Hwnd, "Int", GWL_WNDPROC, "Ptr", WindowProcNew, "Ptr")
+    Init := True
+  }
+}
+WindowProc(hwnd, uMsg, wParam, lParam) {
+  critical
+  static WM_CTLCOLOREDIT := 0x0133
+  static WM_CTLCOLORLISTBOX := 0x0134
+  static WM_CTLCOLORBTN := 0x0135
+  static WM_CTLCOLORSTATIC := 0x0138
+  static DC_BRUSH := 18
+
+  switch uMsg {
+    case WM_CTLCOLOREDIT, WM_CTLCOLORLISTBOX:
+    {
+      DllCall("gdi32\SetTextColor", "Ptr", wParam, "UInt", DarkColors["Font"])
+      DllCall("gdi32\SetBkColor", "Ptr", wParam, "UInt", DarkColors["Controls"])
+      DllCall("gdi32\SetDCBrushColor", "Ptr", wParam, "UInt", DarkColors["Controls"], "UInt")
+      return DllCall("gdi32\GetStockObject", "Int", DC_BRUSH, "Ptr")
+    }
+    case WM_CTLCOLORBTN:
+    {
+      DllCall("gdi32\SetDCBrushColor", "Ptr", wParam, "UInt", DarkColors["Background"], "UInt")
+      return DllCall("gdi32\GetStockObject", "Int", DC_BRUSH, "Ptr")
+    }
+    case WM_CTLCOLORSTATIC:
+    {
+      DllCall("gdi32\SetTextColor", "Ptr", wParam, "UInt", DarkColors["Font"])
+      DllCall("gdi32\SetBkColor", "Ptr", wParam, "UInt", DarkColors["Background"])
+      return TextBGBrush
+    }
+  }
+  return DllCall("user32\CallWindowProc", "Ptr", WindowProcOld, "Ptr", hwnd, "UInt", uMsg, "Ptr", wParam, "Ptr", lParam)
 }
 ; ---------------------------------------------------------------------------
 ; Event
