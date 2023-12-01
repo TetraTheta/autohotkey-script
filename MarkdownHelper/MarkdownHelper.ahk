@@ -17,7 +17,7 @@
 
 ; Hack - Fix tray menu not recognizing keyboard input
 WinActivate A_ScriptHwnd
-Send "{Alt Up}"
+Send "{Ctrl Up}"
 
 ; ---------------------------------------------------------------------------
 ; Hotkey
@@ -141,6 +141,8 @@ WorkingDir := IniGet("Setting", "Blog Repository Root", A_ScriptDir)
 KeepConsole := IniGet("Setting", "Keep Console Open", false)
 ExplorerExec := IniGet("Open Explorer", "Executable", "explorer.exe")
 ExplorerArgs := IniGet("Open Explorer", "Arguments", "")
+CmdExec := IniGet("Open Terminal", "Executable", A_ComSpec)
+CmdArgs := IniGet("Open Terminal", "Arguments", "/K cd /d C:\")
 TestServerDir := IniGet("Start Hugo Test Server", "Start Directory", "")
 TestServerExec := IniGet("Start Hugo Test Server", "Executable", "")
 TestServerArgs := IniGet("Start Hugo Test Server", "Arguments", "")
@@ -162,6 +164,7 @@ TraySetIcon("icon_normal.ico")
 MenuTray := A_TrayMenu
 MenuTray.Delete() ; Reset tray menu
 MenuTray.Add("Open &Explorer`tE", OpenExplorer)
+MenuTray.Add("Open &Terminal`tT", OpenTerminal)
 MenuTray.Add("Start Hugo Test &Server`tS", RunServer)
 MenuTray.Add("Open Test &Page`tP", OpenPage)
 MenuTray.Add()
@@ -181,11 +184,15 @@ MenuTray.Rename("E&xit", "E&xit`tX")
 MenuTray.Default := "E&xit`tX" ; Default action is 'Exit'
 ; Set menu item icon
 MenuTray.SetIcon("Open &Explorer`tE", "imageres.dll", 4)
+MenuTray.SetIcon("Open &Terminal`tT", "imageres.dll", 264)
 MenuTray.SetIcon("Start Hugo Test &Server`tS", "imageres.dll", 264)
 MenuTray.SetIcon("Open Test &Page`tP", "netshell.dll", 86)
 ; Menu function
 OpenExplorer(ItemName, ItemPos, MyMenu) {
   Run("`"" . ExplorerExec . "`" " . ExplorerArgs)
+}
+OpenTerminal(ItemName, ItemPos, MyMenu) {
+  Run("`"" . CmdExec . "`" " . CmdArgs)
 }
 RunServer(ItemName, ItemPos, MyMenu) {
   Run("`"" . TestServerExec . "`" " . TestServerArgs, TestServerDir)
@@ -194,7 +201,7 @@ OpenPage(ItemName, ItemPos, MyMenu) {
   Run("`"" . TestPageExec . "`" " . TestPageArgs)
 }
 ; Dark Context Menu
-SetMenuAttr(MenuTray)
+SetMenuAttr()
 ; ---------------------------------------------------------------------------
 ; Function
 ; ---------------------------------------------------------------------------

@@ -1,5 +1,5 @@
 /*
-SetMenuAttr(MenuObj)
+SetMenuAttr()
 Set context menu to dark mode
 SetWinAttr(GuiObj)
 Set GUI object to dark mode
@@ -9,7 +9,7 @@ Set window to dark mode
 ; Source: https://www.autohotkey.com/boards/viewtopic.php?t=115952
 DarkColors := Map("Background", "0x202020", "Controls", "0x404040", "Font", "0xE0E0E0")
 TextBGBrush := DllCall("gdi32\CreateSolidBrush", "UInt", DarkColors["Background"], "Ptr")
-SetMenuAttr(MenuObj) {
+SetMenuAttr() {
   global DarkColors
   if (VerCompare(A_OSVersion, "10.0.17763") >= 0) {
     DWMWA_USE_IMMERSIVE_DARK_MODE := 19
