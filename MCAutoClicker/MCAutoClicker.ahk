@@ -53,12 +53,10 @@ minecraft_hwnd := "" ; Temporary variable because SetTimer can't execute functio
 
 #HotIf WinExist(game_title)
 XButton1::
-F10::
 {
   ToggleClickKeep()
 }
 XButton2::
-F11::
 {
   ToggleClickRepeat()
 }
