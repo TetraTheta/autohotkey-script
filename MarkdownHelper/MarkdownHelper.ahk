@@ -15,10 +15,6 @@
 ;@Ahk2Exe-SetMainIcon icon_normal.ico ; Default icon
 ;@Ahk2Exe-SetProductName MarkdownHelper
 
-; Hack - Fix tray menu not recognizing keyboard input
-WinActivate A_ScriptHwnd
-Send "{Ctrl Up}"
-
 ; ---------------------------------------------------------------------------
 ; Hotkey
 ; ---------------------------------------------------------------------------
@@ -132,6 +128,11 @@ Send "{Ctrl Up}"
     args := A_ComSpec . " " . cmdSwitch . " cd `"" . WorkingDir . "`" && npm run new " . res[2] . " " . res[1]
     Run(args, WorkingDir)
   }
+}
+; Ctrl + Shift + C : Show Tidy GUI
+^+C::
+{
+  TidyInput()
 }
 ; ---------------------------------------------------------------------------
 ; Variable
@@ -266,8 +267,8 @@ SimpleInput(aTitle := A_ScriptName, aMessage := "", aIconFile := "shell32.dll", 
 }
 ; AdvInput : Show GUI and return value of Gui.Edit and Gui.DDL
 AdvInput(aTitle := A_ScriptName, aMessage := "", aDDLIndex := 3, aEditDefault := "", aIconFile := "shell32.dll", aIconIndex := 1, aTimeout := 30) {
-  DDL_Key := ["Archon Quests (Genshin)", "Blue Archive", "Chit Chat", "Default", "Event Quests (Genshin)", "Game Misc", "Genshin Misc", "Honkai: Star Rail", "Minecraft", "Music", "Story Quests (Genshin)", "The Division", "World Quests (Genshin)"]
-  DDL_Val := ["genshin-archon", "blue-archive", "chit-chat", "default", "genshin-event", "game-misc", "genshin-misc", "honkai-star-rail", "minecraft", "music", "genshin-story", "the-division", "genshin-world"]
+  DDL_Key := ["Archon Quests (Genshin)", "Blue Archive", "Chit Chat", "Default", "Event Quests (Genshin)", "Game Misc", "Genshin Misc", "Honkai: Star Rail", "Minecraft", "Music", "Story Quests (Genshin)", "The Division", "Tower of Fantasy", "World Quests (Genshin)"]
+  DDL_Val := ["genshin-archon", "blue-archive", "chit-chat", "default", "genshin-event", "game-misc", "genshin-misc", "honkai-star-rail", "minecraft", "music", "genshin-story", "the-division", "tower-of-fantasy", "genshin-world"]
 
   ResEdit := ""
   ResDDL := ""
@@ -332,6 +333,40 @@ AdvInput(aTitle := A_ScriptName, aMessage := "", aDDLIndex := 3, aEditDefault :=
     }
   }
 }
+; TidyInput: Show GUI which removes excessive line breaks
+TidyInput() {
+  TraySetIcon("shell32.dll", 2)
+  MyGui := Gui(, "Tidy Text")
+  /*@Ahk2Exe-Keep
+  TraySetIcon("*")
+  */
+  ;@Ahk2Exe-IgnoreBegin
+  TraySetIcon("icon_normal.ico")
+  ;@Ahk2Exe-IgnoreEnd
+
+  ; GUI option
+  MyGui.Opt("-MaximizeBox -MinimizeBox -Resize +OwnDialogs")
+  MyGui.OnEvent("Escape", (*) => (MyGui.Destroy()))
+
+  ; GUI elements
+  Gui_Input := MyGui.AddEdit("x12 y12 w600 h600 +Multi +Wrap")
+  Gui_Tidy := MyGui.AddButton("x12 y618 w600 h23", "Tidy && Copy")
+
+  ; GUI event
+  Gui_Tidy.OnEvent("Click", (*) => (
+    (Gui_Input.Value == "") ? (Shake(MyGui)) : (
+      Gui_Input.Value := TidyCopyText(Gui_Input.Value), MyGui.Destroy()
+    )
+  ))
+
+  ; Dark mode
+  SetWinAttr(MyGui)
+  SetWinTheme(MyGui)
+
+  ; Show GUI
+  MyGui.Show("AutoSize Center")
+  Gui_Input.Focus()
+}
 ; Shake: Shake given GUI
 Shake(targetGui, aShakes := 20, aRattleX := 3, aRattleY := 3) {
   if (!IsObject(targetGui)) {
@@ -346,6 +381,15 @@ Shake(targetGui, aShakes := 20, aRattleX := 3, aRattleY := 3) {
     Sleep(10)
   }
   targetGui.Move(oriX, oriY)
+}
+; TidyCopyText: Tidy the text and copy it to clipboard
+TidyCopyText(input) {
+  output := RegExReplace(input, "(\s*[\r\n]){2,}", "`n`n")
+  output := LTrim(output, "`n")
+  output := RTrim(output, "`n")
+  
+  A_Clipboard := output
+  return output
 }
 ; ---------------------------------------------------------------------------
 ; Event
