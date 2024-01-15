@@ -149,6 +149,8 @@ TestServerExec := IniGet("Start Hugo Test Server", "Executable", "")
 TestServerArgs := IniGet("Start Hugo Test Server", "Arguments", "")
 TestPageExec := IniGet("Open Test Page", "Browser Executable", "firefox.exe")
 TestPageArgs := IniGet("Open Test Page", "Arguments", "")
+NotepadExec := IniGet("Open Tistory Redirect Script", "Executable", "notepad.exe")
+RedirectScriptFilePath := IniGet("Open Tistory Redirect Script", "Redirect Script Path", "")
 ; Runtime variables (will be written back to INI)
 LastIndex := IniGet("New Post", "Last Index", "3")
 LastTitle := IniGet("New Post", "Last Title", "")
@@ -162,6 +164,16 @@ A_IconTip := "MarkdownHelper" ; Tray icon tip
 ;@Ahk2Exe-IgnoreBegin
 TraySetIcon("icon_normal.ico")
 ;@Ahk2Exe-IgnoreEnd
+; Define misc sub menu
+SubMenuTray := Menu()
+SubMenuTray.Add("Open Tistory Redirect Script`tT", OpenRedirectScript)
+SubMenuTray.Add()
+SubMenuTray.Add("Reload`tR", ReloadScript)
+SubMenuTray.Add("List Hotkeys`tH", ListHotkey)
+SubMenuTray.SetIcon("Open Tistory Redirect Script`tT", "imageres.dll", 15)
+SubMenuTray.SetIcon("Reload`tR", "imageres.dll", 230)
+SubMenuTray.SetIcon("List Hotkeys`tH", "shell32.dll", 2)
+; Re-define tray menu
 MenuTray := A_TrayMenu
 MenuTray.Delete() ; Reset tray menu
 MenuTray.Add("Open &Explorer`tE", OpenExplorer)
@@ -169,25 +181,16 @@ MenuTray.Add("Open &Terminal`tT", OpenTerminal)
 MenuTray.Add("Start Hugo Test &Server`tS", RunServer)
 MenuTray.Add("Open Test &Page`tP", OpenPage)
 MenuTray.Add()
-MenuTray.AddStandard()
-; Modify keyboard shortcut of standard menu items
-;@Ahk2Exe-IgnoreBegin
-MenuTray.Rename("&Open", "Open")
-MenuTray.Rename("&Help", "Help")
-MenuTray.Rename("&Window Spy", "Window Spy")
-MenuTray.Rename("&Reload Script", "Reload Script")
-MenuTray.Rename("&Edit Script", "Edit Script")
-;@Ahk2Exe-IgnoreEnd
-MenuTray.Rename("&Suspend Hotkeys", "Suspend Hotkeys")
-MenuTray.Rename("&Pause Script", "Pause Script")
-MenuTray.Rename("E&xit", "E&xit`tX")
-; Set default entry
-MenuTray.Default := "E&xit`tX" ; Default action is 'Exit'
-; Set menu item icon
+MenuTray.Add("Misc`tM", SubMenuTray)
+MenuTray.Add()
+MenuTray.Add("E&xit`tX", ExitScript)
 MenuTray.SetIcon("Open &Explorer`tE", "imageres.dll", 4)
 MenuTray.SetIcon("Open &Terminal`tT", "imageres.dll", 264)
 MenuTray.SetIcon("Start Hugo Test &Server`tS", "imageres.dll", 264)
 MenuTray.SetIcon("Open Test &Page`tP", "netshell.dll", 86)
+MenuTray.SetIcon("E&xit`tX", "imageres.dll", 85)
+; Set default entry
+MenuTray.Default := "E&xit`tX" ; Default action is 'Exit'
 ; Menu function
 OpenExplorer(ItemName, ItemPos, MyMenu) {
   Run("`"" . ExplorerExec . "`" " . ExplorerArgs)
@@ -200,6 +203,18 @@ RunServer(ItemName, ItemPos, MyMenu) {
 }
 OpenPage(ItemName, ItemPos, MyMenu) {
   Run("`"" . TestPageExec . "`" " . TestPageArgs)
+}
+OpenRedirectScript(ItemName, ItemPos, MyMenu) {
+  Run("`"" . NotepadExec . "`" " . RedirectScriptFilePath)
+}
+ReloadScript(ItemName, ItemPos, MyMenu) {
+  Reload()
+}
+ListHotkey(ItemName, ItemPos, MyMenu) {
+  ListHotkeys()
+}
+ExitScript(ItemName, ItemPos, MyMenu) {
+  ExitApp()
 }
 ; Dark Context Menu
 SetMenuAttr()
