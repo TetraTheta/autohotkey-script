@@ -1,5 +1,5 @@
 /**
- * MarkdownHelper v1.0.0 : My Hugo Blog Markdown Helper
+ * MarkdownHelper v1.2.0 : My Hugo Blog Markdown Helper
  */
 #Requires AutoHotkey v2.0
 #Include "..\Lib\ini.ahk"
@@ -10,7 +10,7 @@
 ;@Ahk2Exe-SetCompanyName TetraTheta
 ;@Ahk2Exe-SetCopyright Copyright 2023. TetraTheta. All rights reserved.
 ;@Ahk2Exe-SetDescription My Hugo Blog Markdown Helper
-;@Ahk2Exe-SetFileVersion 1.1.0.0
+;@Ahk2Exe-SetFileVersion 1.2.0.0
 ;@Ahk2Exe-SetLanguage 0x0412
 ;@Ahk2Exe-SetMainIcon icon_normal.ico ; Default icon
 ;@Ahk2Exe-SetProductName MarkdownHelper
