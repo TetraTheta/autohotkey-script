@@ -316,12 +316,19 @@ AdvInput(aTitle := A_ScriptName, aMessage := "", aDDLIndex := 3, aEditDefault :=
   Gui_DDL.SetFont("s14")
 
   ; GUI event
-  Gui_BtnOK.OnEvent("Click", (*) => (
-    (Gui_Edit.Value == "") ? (Shake(MyGui)) : (
-      ResEdit := Gui_Edit.Value, ResDDL := DDL_Val[Gui_DDL.Value], ResDDLIndex := Gui_DDL.Value, MyGui.Destroy()
-    )
-  ))
+  Gui_BtnOK.OnEvent("Click", Gui_BtnOK_Click)
   Gui_BtnCancel.OnEvent("Click", (*) => (MyGui.Destroy()))
+  Gui_BtnOK_Click(GuiCtrlObj, Info) {
+    if (Gui_Edit.Value == "") {
+      Shake(MyGui)
+    } else {
+      ResEdit := Gui_Edit.Value
+      ResDDL := DDL_Val[Gui_DDL.Value]
+      ResDDLIndex := Gui_DDL.Value
+
+      MyGui.Destroy()
+    }
+  }
 
   ; Dark mode
   SetWinAttr(MyGui)
@@ -365,14 +372,31 @@ TidyInput() {
 
   ; GUI elements
   Gui_Input := MyGui.AddEdit("x12 y12 w600 h600 +Multi +Wrap")
-  Gui_Tidy := MyGui.AddButton("x12 y618 w600 h23", "Tidy && Copy")
+  Gui_TextLength := MyGui.AddText("x12 y615 w600 h12", "Length: 0")
+  Gui_Tidy := MyGui.AddButton("x12 y630 w297 h23", "Tidy Text")
+  Gui_TidyCopy := MyGui.AddButton("x315 y630 w297 h23", "Tidy Text && Copy Text")
 
   ; GUI event
-  Gui_Tidy.OnEvent("Click", (*) => (
-    (Gui_Input.Value == "") ? (Shake(MyGui)) : (
-      Gui_Input.Value := TidyCopyText(Gui_Input.Value), MyGui.Destroy()
-    )
-  ))
+  Gui_Tidy.OnEvent("Click", Gui_Tidy_Click)
+  Gui_TidyCopy.OnEvent("Click", Gui_TidyCopy_Click)
+  Gui_Tidy_Click(GuiCtrlObj, Info) {
+    if (Gui_Input.Value == "") {
+      Shake(MyGui)
+    } else {
+      if (!TidyText(Gui_Input, Gui_TextLength)) {
+        Shake(MyGui)
+      }
+    }
+  }
+  Gui_TidyCopy_Click(GuiCtrlObj, Info) {
+    if (Gui_Input.Value == "") {
+      Shake(MyGui)
+    } else {
+      if (!TidyText(Gui_Input, Gui_TextLength)) {
+        Shake(MyGui)
+      }
+    }
+  }
 
   ; Dark mode
   SetWinAttr(MyGui)
@@ -397,14 +421,36 @@ Shake(targetGui, aShakes := 20, aRattleX := 3, aRattleY := 3) {
   }
   targetGui.Move(oriX, oriY)
 }
-; TidyCopyText: Tidy the text and copy it to clipboard
-TidyCopyText(input) {
-  output := RegExReplace(input, "(\s*[\r\n]){2,}", "`n`n")
-  output := LTrim(output, "`n")
-  output := RTrim(output, "`n")
-  
-  A_Clipboard := output
-  return output
+; TidyText: Tidy InputControl's inner text and show length of tidied text to LabelControl. Optionally copy tidied text to clipboard.
+TidyText(InputControl, LabelControl, CopyText := false) {
+  oldText := InputControl.Value
+  newText := RegExReplace(oldText, "(\s*[\r\n]){2,}", "`n`n")
+  newText := LTrim(newText, "`n")
+  newText := RTrim(newText, "`n")
+  InputControl.Value := newText
+
+  flatText := StrReplace(newText, "`n", "")
+  flatTextLength := StrLen(flatText)
+
+  LabelControl.Value := "Length: " . flatTextLength
+
+  isOK := false
+  if (flatTextLength > 1000) {
+    ; These line won't work because of dark mode. It prevents label color change. :(
+    LabelControl.SetFont("cRed")
+    LabelControl.Redraw()
+  } else {
+    isOK := true
+    ; These line won't work because of dark mode. It prevents label color change. :(
+    LabelControl.SetFont("cDefault")
+    LabelControl.Redraw()
+  }
+
+  if (CopyText && isOK) {
+    A_Clipboard := newText
+  }
+
+  return isOK
 }
 ; ---------------------------------------------------------------------------
 ; Event
