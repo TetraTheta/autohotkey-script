@@ -76,7 +76,7 @@
     }
     num := Number(res)
 
-    SendText("{{< gallery/image src=`"" . Format("{:03}", num) . ":" . Format("{:03}", num + 1) . "`" >}}`n`n")
+    SendText("{{< gallery/image src=`"" . Format("{:03}", num) . "::" . Format("{:03}", num + 1) . "`" >}}`n`n")
   }
 }
 ; Ctrl + Shift + G : Insert gallery/image with three sources and caption
@@ -91,18 +91,18 @@
     }
     num := Number(res)
 
-    SendText("{{< gallery/image src=`"" . Format("{:03}", num) . ":" . Format("{:03}", num + 1) . ":" . Format("{:03}", num + 2) . "`" >}}`n`n")
+    SendText("{{< gallery/image src=`"" . Format("{:03}", num) . "::" . Format("{:03}", num + 1) . "::" . Format("{:03}", num + 2) . "`" >}}`n`n")
   }
 }
 ; Win + G : Insert gallery/image with two sources
 #G::
 {
-  SendText("{{< gallery/image src=`":`" >}}`n`n")
+  SendText("{{< gallery/image src=`"::`" >}}`n`n")
 }
 ; Win + Shift + G : Insert gallery/image with three sources
 #+G::
 {
-  SendText("{{< gallery/image src=`"::`" >}}`n`n")
+  SendText("{{< gallery/image src=`"::_::`" >}}`n`n")
 }
 ; Ctrl + Q : Insert NBSP
 ^Q::
@@ -192,28 +192,28 @@ MenuTray.SetIcon("E&xit`tX", "imageres.dll", 85)
 ; Set default entry
 MenuTray.Default := "E&xit`tX" ; Default action is 'Exit'
 ; Menu function
-OpenExplorer(ItemName, ItemPos, MyMenu) {
+OpenExplorer(*) {
   Run("`"" . ExplorerExec . "`" " . ExplorerArgs)
 }
-OpenTerminal(ItemName, ItemPos, MyMenu) {
+OpenTerminal(*) {
   Run("`"" . CmdExec . "`" " . CmdArgs)
 }
-RunServer(ItemName, ItemPos, MyMenu) {
+RunServer(*) {
   Run("`"" . TestServerExec . "`" " . TestServerArgs, TestServerDir)
 }
-OpenPage(ItemName, ItemPos, MyMenu) {
+OpenPage(*) {
   Run("`"" . TestPageExec . "`" " . TestPageArgs)
 }
-OpenRedirectScript(ItemName, ItemPos, MyMenu) {
+OpenRedirectScript(*) {
   Run("`"" . NotepadExec . "`" " . RedirectScriptFilePath)
 }
-ReloadScript(ItemName, ItemPos, MyMenu) {
+ReloadScript(*) {
   Reload()
 }
-ListHotkey(ItemName, ItemPos, MyMenu) {
+ListHotkey(*) {
   ListHotkeys()
 }
-ExitScript(ItemName, ItemPos, MyMenu) {
+ExitScript(*) {
   ExitApp()
 }
 ; Dark Context Menu
@@ -392,8 +392,10 @@ TidyInput() {
     if (Gui_Input.Value == "") {
       Shake(MyGui)
     } else {
-      if (!TidyText(Gui_Input, Gui_TextLength)) {
+      if (!TidyText(Gui_Input, Gui_TextLength, true)) {
         Shake(MyGui)
+      } else {
+        MyGui.Destroy()
       }
     }
   }
