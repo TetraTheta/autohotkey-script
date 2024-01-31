@@ -76,7 +76,7 @@
     }
     num := Number(res)
 
-    SendText("{{< gallery/image src=`"" . Format("{:03}", num) . "::" . Format("{:03}", num + 1) . "`" >}}`n`n")
+    SendText("{{< gallery/image src=`"" . Format("{:03}", num) . "|" . Format("{:03}", num + 1) . "`" >}}`n`n")
   }
 }
 ; Ctrl + Shift + G : Insert gallery/image with three sources and caption
@@ -91,18 +91,18 @@
     }
     num := Number(res)
 
-    SendText("{{< gallery/image src=`"" . Format("{:03}", num) . "::" . Format("{:03}", num + 1) . "::" . Format("{:03}", num + 2) . "`" >}}`n`n")
+    SendText("{{< gallery/image src=`"" . Format("{:03}", num) . "|" . Format("{:03}", num + 1) . "|" . Format("{:03}", num + 2) . "`" >}}`n`n")
   }
 }
 ; Win + G : Insert gallery/image with two sources
 #G::
 {
-  SendText("{{< gallery/image src=`"::`" >}}`n`n")
+  SendText("{{< gallery/image src=`"|`" >}}`n`n")
 }
 ; Win + Shift + G : Insert gallery/image with three sources
 #+G::
 {
-  SendText("{{< gallery/image src=`"::_::`" >}}`n`n")
+  SendText("{{< gallery/image src=`"||`" >}}`n`n")
 }
 ; Ctrl + Q : Insert NBSP
 ^Q::
