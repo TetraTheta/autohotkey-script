@@ -178,6 +178,7 @@ MenuTray := A_TrayMenu
 MenuTray.Delete() ; Reset tray menu
 MenuTray.Add("Open &Explorer`tE", OpenExplorer)
 MenuTray.Add("Open &Terminal`tT", OpenTerminal)
+MenuTray.Add()
 MenuTray.Add("Start Hugo Test &Server`tS", RunServer)
 MenuTray.Add("Open Test &Page`tP", OpenPage)
 MenuTray.Add()
@@ -311,6 +312,8 @@ AdvInput(aTitle := A_ScriptName, aMessage := "", aDDLIndex := 3, aEditDefault :=
   Gui_Msg := MyGui.AddText("x50 y12 w272 h83", aMessage)
   Gui_Timer := MyGui.AddText("x20 y47 w17 h12", Format("{:02}", aTimeout))
   Gui_DDL := MyGui.AddDropDownList("x12 y72 w310 h20 vPostDir Choose" . aDDLIndex . " R200", DDL_Key)
+
+  Gui_DDL.SetFont("q5", "Malgun Gothic")
 
   ; Increase font size of DDL
   Gui_DDL.SetFont("s14")
