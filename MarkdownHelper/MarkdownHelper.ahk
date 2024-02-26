@@ -463,7 +463,7 @@ TidyText(InputControl, LabelControl, CopyText := false) {
 ; OnExit : Play ding sound when exit by #SingleInstance Force
 OnExitFunc(ExitReason, ExitCode) {
   if (ExitReason == "Single" || ExitReason == "Reload") {
-    SoundPlay "*-48"
+    SoundPlay("*48")
   }
 }
 OnExit(OnExitFunc)
