@@ -138,6 +138,9 @@ RedirectScriptFilePath := IniGet("Open Tistory Redirect Script", "Redirect Scrip
 ; Runtime variables (will be written back to INI)
 LastIndex := IniGet("New Post", "Last Index", "3")
 LastTitle := IniGet("New Post", "Last Title", "")
+; Misc variables
+InputGUIHwnd := 0
+TidyGUIHwnd := 0
 ; Sanitize variables
 KeepConsole := (IsNumber(KeepConsole) && KeepConsole == 0) ? 0 : 1
 LastIndex := IsNumber(LastIndex) ? Number(LastIndex) : 3
@@ -222,7 +225,13 @@ SetMenuAttr()
  */
 InputSimpleMulti(aTitle := A_ScriptName, aMessage := "", aLabel1 := "", aLabel2 := "", aHelp := "", aIconFile := "shell32.dll", aIconIndex := 1, aTimeout := 10) {
   ; Get global variables
-  global L_CANCEL, L_HELP, L_OK
+  global InputGUIHwnd, L_CANCEL, L_HELP, L_OK
+
+  ; Prevent multiple GUIs to open
+  if (InputGUIHwnd != 0) {
+    WinActivate("ahk_id " . InputGUIHwnd)
+    return [false, "", ""]
+  }
 
   ; Define variables to return
   R_Edit1 := ""
@@ -241,7 +250,8 @@ InputSimpleMulti(aTitle := A_ScriptName, aMessage := "", aLabel1 := "", aLabel2 
 
   ; Main GUI
   MyGui.Opt("+AlwaysOnTop -MaximizeBox -MinimizeBox -Resize +OwnDialogs")
-  MyGui.OnEvent("Escape", (*) => (MyGui.Destroy()))
+  MyGui.OnEvent("Escape", (*) => (InputGUIHwnd := 0, MyGui.Destroy()))
+  MyGui.OnEvent("Close", (*) => (InputGUIHwnd := 0))
   MyGui.SetFont("s10", "Malgun Gothic")
 
   ; GUI element
@@ -258,7 +268,7 @@ InputSimpleMulti(aTitle := A_ScriptName, aMessage := "", aLabel1 := "", aLabel2 
 
   ; GUI event
   Gui_OK.OnEvent("Click", ParseControl)
-  Gui_Cancel.OnEvent("Click", (*) => (MyGui.Destroy()))
+  Gui_Cancel.OnEvent("Click", (*) => (InputGUIHwnd := 0, MyGui.Destroy()))
   ParseControl(*) {
     if (Gui_Edit2.Value == "") {
       Shake(MyGui)
@@ -266,6 +276,7 @@ InputSimpleMulti(aTitle := A_ScriptName, aMessage := "", aLabel1 := "", aLabel2 
       R_OK := true
       R_Edit1 := Gui_Edit1.Value == "" ? "001" : Gui_Edit1.Value
       R_Edit2 := Gui_Edit2.Value
+      InputGUIHwnd := 0
       MyGui.Destroy()
     }
   }
@@ -278,6 +289,7 @@ InputSimpleMulti(aTitle := A_ScriptName, aMessage := "", aLabel1 := "", aLabel2 
   ; Show GUI
   MyGui.Show("AutoSize Center")
   Gui_Edit2.Focus()
+  InputGUIHwnd := MyGui.Hwnd
 
   ; Start timer
   GuiHwnd := MyGui.Hwnd
@@ -294,6 +306,7 @@ InputSimpleMulti(aTitle := A_ScriptName, aMessage := "", aLabel1 := "", aLabel2 
       R_OK := false
       R_Edit1 := ""
       R_Edit2 := ""
+      InputGUIHwnd := 0
       SetTimer(, 0)
     }
   }
@@ -313,7 +326,13 @@ InputSimpleMulti(aTitle := A_ScriptName, aMessage := "", aLabel1 := "", aLabel2 
  */
 InputSimpleSingle(aTitle := A_ScriptName, aMessage := "", aLabel := "", aHelp := "", aIconFile := "shell32.dll", aIconIndex := 1, aTimeout := 10) {
   ; Get global variables
-  global L_CANCEL, L_HELP, L_OK
+  global InputGUIHwnd, L_CANCEL, L_HELP, L_OK
+
+  ; Prevent multiple GUIs to open
+  if (InputGUIHwnd != 0) {
+    WinActivate("ahk_id " . InputGUIHwnd)
+    return [false, ""]
+  }
 
   ; Define variables to return
   R_Edit := ""
@@ -331,7 +350,8 @@ InputSimpleSingle(aTitle := A_ScriptName, aMessage := "", aLabel := "", aHelp :=
 
   ; GUI option
   MyGui.Opt("+AlwaysOnTop -MaximizeBox -MinimizeBox -Resize +OwnDialogs")
-  MyGui.OnEvent("Escape", (*) => (MyGui.Destroy()))
+  MyGui.OnEvent("Escape", (*) => (InputGUIHwnd := 0, MyGui.Destroy()))
+  MyGui.OnEvent("Close", (*) => (InputGUIHwnd := 0))
   MyGui.SetFont("s10", "Malgun Gothic")
 
   ; GUI element
@@ -346,13 +366,14 @@ InputSimpleSingle(aTitle := A_ScriptName, aMessage := "", aLabel := "", aHelp :=
 
   ; GUI event
   Gui_OK.OnEvent("Click", ParseControl)
-  Gui_Cancel.OnEvent("Click", (*) => (MyGui.Destroy()))
+  Gui_Cancel.OnEvent("Click", (*) => (InputGUIHwnd := 0, MyGui.Destroy()))
   ParseControl(*) {
     if (Gui_Edit.Value == "") {
       Shake(MyGui)
     } else {
       R_Edit := Gui_Edit.Value
       R_OK := true
+      InputGUIHwnd := 0
       MyGui.Destroy()
     }
   }
@@ -365,6 +386,7 @@ InputSimpleSingle(aTitle := A_ScriptName, aMessage := "", aLabel := "", aHelp :=
   ; Show GUI
   MyGui.Show("AutoSize Center")
   Gui_Edit.Focus()
+  InputGUIHwnd := MyGui.Hwnd
 
   ; Start timer
   GuiHwnd := MyGui.Hwnd
@@ -380,6 +402,7 @@ InputSimpleSingle(aTitle := A_ScriptName, aMessage := "", aLabel := "", aHelp :=
       MyGui.Destroy()
       R_Edit := ""
       R_OK := false
+      InputGUIHwnd := 0
       SetTimer(, 0)
     }
   }
@@ -402,7 +425,13 @@ InputSimpleSingle(aTitle := A_ScriptName, aMessage := "", aLabel := "", aHelp :=
  */
 InputAdvanced(aTitle := A_ScriptName, aMessage := "", aLabel1 := "", aDDLIndex := 0, aLabel2 := "", aEditDefault := "", aHelp := "", aIconFile := "shell32.dll", aIconIndex := 1, aTimeout := 30) {  
   ; Get global variables
-  global KeyValue, L_CANCEL, L_HELP, L_OK
+  global InputGUIHwnd, KeyValue, L_CANCEL, L_HELP, L_OK
+
+  ; Prevent multiple GUIs to open
+  if (InputGUIHwnd != 0) {
+    WinActivate("ahk_id " . InputGUIHwnd)
+    return [false, 0, "", ""]
+  }
 
   kv := KeyValue()
   kv.Add("Archon Quests (Genshin)", "genshin-archon")
@@ -440,7 +469,8 @@ InputAdvanced(aTitle := A_ScriptName, aMessage := "", aLabel1 := "", aDDLIndex :
 
   ; GUI option
   MyGui.Opt("+AlwaysOnTop -MaximizeBox -MinimizeBox -Resize +OwnDialogs")
-  MyGui.OnEvent("Escape", (*) => (MyGui.Destroy()))
+  MyGui.OnEvent("Escape", (*) => (InputGUIHwnd := 0, MyGui.Destroy()))
+  MyGui.OnEvent("Close", (*) => (InputGUIHwnd := 0))
   MyGui.SetFont("s10", "Malgun Gothic")
 
   ; GUI element
@@ -457,7 +487,7 @@ InputAdvanced(aTitle := A_ScriptName, aMessage := "", aLabel1 := "", aDDLIndex :
 
   ; GUI event
   Gui_OK.OnEvent("Click", ParseControl)
-  Gui_Cancel.OnEvent("Click", (*) => (MyGui.Destroy()))
+  Gui_Cancel.OnEvent("Click", (*) => (InputGUIHwnd := 0, MyGui.Destroy()))
   ParseControl(*) {
     if (Gui_Edit.Value == "") {
       Shake(MyGui)
@@ -466,6 +496,7 @@ InputAdvanced(aTitle := A_ScriptName, aMessage := "", aLabel1 := "", aDDLIndex :
       R_DDL_Val := kv.values[Gui_DDL.Value]
       R_Edit := Gui_Edit.Value
       R_OK := true
+      InputGUIHwnd := 0
       MyGui.Destroy()
     }
   }
@@ -478,6 +509,7 @@ InputAdvanced(aTitle := A_ScriptName, aMessage := "", aLabel1 := "", aDDLIndex :
   ; Show GUI
   MyGui.Show("AutoSize Center")
   Gui_Edit.Focus()
+  InputGUIHwnd := MyGui.Hwnd
 
   ; Start timer
   GuiHwnd := MyGui.Hwnd
@@ -495,6 +527,7 @@ InputAdvanced(aTitle := A_ScriptName, aMessage := "", aLabel1 := "", aDDLIndex :
       R_DDL_Val := ""
       R_Edit := ""
       R_OK := false
+      InputGUIHwnd := 0
       SetTimer(, 0)
     }
   }
@@ -504,7 +537,13 @@ InputAdvanced(aTitle := A_ScriptName, aMessage := "", aLabel1 := "", aDDLIndex :
  */
 InputTidy() {
   ; Get global variable
-  global L_CANCEL, L_OK, L_TIDY_BTN_TIDY, L_TIDY_BTN_TIDY_COPY, L_TIDY_LENGTH, L_TIDY_TITLE
+  global L_CANCEL, L_OK, L_TIDY_BTN_TIDY, L_TIDY_BTN_TIDY_COPY, L_TIDY_LENGTH, L_TIDY_TITLE, TidyGUIHwnd
+
+  ; Prevent multiple GUIs to open
+  if (TidyGUIHwnd != 0) {
+    WinActivate("ahk_id " . TidyGUIHwnd)
+    return
+  }
 
   ; Create GUI and set icon (hack)
   TraySetIcon("shell32.dll", 2)
@@ -518,7 +557,8 @@ InputTidy() {
 
   ; GUI option
   MyGui.Opt("-MaximizeBox -MinimizeBox -Resize +OwnDialogs")
-  MyGui.OnEvent("Escape", (*) => (MyGui.Destroy()))
+  MyGui.OnEvent("Escape", (*) => (TidyGUIHwnd := 0, MyGui.Destroy()))
+  MyGui.OnEvent("Close", (*) => (TidyGUIHwnd := 0))
 
   ; GUI elements
   Gui_Edit := MyGui.AddEdit("x12 y12 w600 h600 +Multi +Wrap")
@@ -584,6 +624,7 @@ InputTidy() {
   ; Show GUI
   MyGui.Show("AutoSize Center")
   Gui_Edit.Focus()
+  TidyGUIHwnd := MyGui.Hwnd
 }
 /**
  * Check if given input is number
