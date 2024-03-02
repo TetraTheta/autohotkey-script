@@ -12,7 +12,7 @@
 ;@Ahk2Exe-SetCompanyName TetraTheta
 ;@Ahk2Exe-SetCopyright Copyright 2023. TetraTheta. All rights reserved.
 ;@Ahk2Exe-SetDescription My Hugo Blog Markdown Helper
-;@Ahk2Exe-SetFileVersion 2.0.0.0
+;@Ahk2Exe-SetFileVersion 2.0.1.0
 ;@Ahk2Exe-SetLanguage 0x0412
 ;@Ahk2Exe-SetMainIcon icon_normal.ico ; Default icon
 ;@Ahk2Exe-SetProductName MarkdownHelper
@@ -480,7 +480,7 @@ InputAdvanced(aTitle := A_ScriptName, aMessage := "", aLabel1 := "", aDDLIndex :
   Gui_Label1 := MyGui.AddText("x12 y78 w460 h19", aLabel1)
   Gui_DDL := MyGui.AddDropDownList("x12 y105 w460 h25 vPostDir Choose" . aDDLIndex . " R200", kv.keys)
   Gui_Label2 := MyGui.AddText("x12 y134 w460 h19", aLabel2)
-  Gui_Edit := MyGui.AddEdit("x12 y157 w460 h25 -Multi")
+  Gui_Edit := MyGui.AddEdit("x12 y157 w460 h25 -Multi", aEditDefault)
   Gui_Help := MyGui.AddButton("x12 y190 w75 h33", L_HELP)
   Gui_OK := MyGui.AddButton("x316 y190 w75 h33 +Default", L_OK)
   Gui_Cancel := MyGui.AddButton("x397 y190 w75 h33", L_CANCEL)
