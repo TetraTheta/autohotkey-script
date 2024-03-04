@@ -585,6 +585,7 @@ InputTidy() {
       if (!TidyText(true)) {
         Shake(MyGui)
       } else {
+        TidyGUIHwnd := 0
         MyGui.Destroy()
       }
     }
