@@ -12,12 +12,34 @@ DetectHiddenWindows(True)
 ;@Ahk2Exe-SetCompanyName TetraTheta
 ;@Ahk2Exe-SetCopyright Copyright 2023. TetraTheta. All rights reserved.
 ;@Ahk2Exe-SetDescription Auto clicker for Minecraft
-;@Ahk2Exe-SetFileVersion 2.0.1.0
+;@Ahk2Exe-SetFileVersion 2.1.0.0
 ;@Ahk2Exe-SetLanguage 0x0412
 ;@Ahk2Exe-SetMainIcon icon_normal.ico ; Default icon
 ;@Ahk2Exe-SetProductName MCAutoClicker
 
-; Set tray icon stuff
+; ---------------------------------------------------------------------------
+; Hotkey
+; ---------------------------------------------------------------------------
+#HotIf WinExist(game_title)
+XButton1::ToggleClickKeep()
+XButton2::ToggleClickRepeat()
+#HotIf
+
+; ---------------------------------------------------------------------------
+; Variable
+; ---------------------------------------------------------------------------
+; Config variables
+beep := IniGet("General", "Beep", 0)
+click_interval := IniGet("Minecraft", "Click Interval", 1000)
+game_title := IniGet("Minecraft", "Window Title", "Minecraft* (version hidden from driver) - Multiplayer (3rd-party Server)")
+; Misc variables
+toggle_keep_click := False
+toggle_repeat_click := False
+minecraft_hwnd := "" ; Temporary variable because SetTimer can't execute function with parameter :(
+
+; ------------------------------------------------------------------------------
+; Tray Icon & Menu (+functions)
+; ------------------------------------------------------------------------------
 A_IconTip := "MCAutoClicker" ; Tray icon tip
 ;@Ahk2Exe-IgnoreBegin
 TraySetIcon("icon_normal.ico")
@@ -28,9 +50,9 @@ MenuTray := A_TrayMenu ; Main tray menu
 MenuTray.Delete() ; Reset default tray menu
 MenuTraySub := Menu() ; Sub tray menu
 ; Submenu
-if (!A_IsCompiled) {
-  MenuTraySub.Add("Edit Script`tE", EditScript)
-}
+;@Ahk2Exe-IgnoreBegin
+MenuTraySub.Add("Edit Script`tE", EditScript)
+;@Ahk2Exe-IgnoreEnd
 MenuTraySub.Add("Reload Script`tR", ReloadScript)
 MenuTraySub.Add() ; Create separator
 MenuTraySub.Add("Suspend Script`tS", SuspendScript)
@@ -42,27 +64,9 @@ MenuTray.Add("Advanced Menu`tA", MenuTraySub)
 MenuTray.Add() ; Create separator
 MenuTray.Add("Exit Script`tX", ExitScript)
 
-; Read INI file for settings
-beep := IniGet("General", "Beep", 0)
-click_interval := IniGet("Minecraft", "Click Interval", 1000)
-game_title := IniGet("Minecraft", "Window Title", "Minecraft* (version hidden from driver) - Multiplayer (3rd-party Server)")
-toggle_keep_click := False
-toggle_repeat_click := False
-
-minecraft_hwnd := "" ; Temporary variable because SetTimer can't execute function with parameter :(
-
-#HotIf WinExist(game_title)
-XButton1::
-{
-  ToggleClickKeep()
-}
-XButton2::
-{
-  ToggleClickRepeat()
-}
-#HotIf
-
-; Functions
+; ------------------------------------------------------------------------------
+; Function
+; ------------------------------------------------------------------------------
 EditScript(ItemName, ItemPos, TheMenu) {
   ; Double check because A_ScriptFullPath will return EXE file if run at compiled script
   if (!A_IsCompiled) {
@@ -116,12 +120,14 @@ ToggleClickRepeat() {
     ; toggle_repeat_click is On
     toggle_repeat_click := False
     SetTimer(ClickRepeat, 0)
+    SoundPlay(A_WinDir . "/Media/Speech Off.wav", true)
   } else {
     ; toggle_repeat_click is Off
     toggle_repeat_click := True
     minecraft_hwnd := WinGetID(game_title)
     SetTimer(ClickRepeat, click_interval)
     ClickRepeat()
+    SoundPlay(A_WinDir . "/Media/Speech On.wav", true)
   }
 }
 ClickRepeat() {
@@ -143,10 +149,12 @@ ToggleClickKeep() {
       ; toggle_keep_click is On
       toggle_keep_click := False
       Click("Left Up")
+      SoundPlay(A_WinDir . "/Media/Speech Off.wav", true)
     } else {
       ; toggle_keep_click is Off
       toggle_keep_click := True
       Click("Left Down")
+      SoundPlay(A_WinDir . "/Media/Speech On.wav", true)
     }
   }
 }
