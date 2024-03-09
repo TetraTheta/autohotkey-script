@@ -561,7 +561,7 @@ InputTidy() {
   MyGui.OnEvent("Close", (*) => (TidyGUIHwnd := 0))
 
   ; GUI elements
-  Gui_Edit := MyGui.AddEdit("x12 y12 w600 h600 +Multi +Wrap")
+  Gui_Edit := MyGui.AddEdit("x12 y12 w600 h600 +Multi +Wrap", A_Clipboard)
   Gui_TextLength := MyGui.AddText("x12 y615 w600 h12", L_TIDY_LENGTH . "0")
   Gui_Tidy := MyGui.AddButton("x12 y630 w297 h23", L_TIDY_BTN_TIDY)
   Gui_TidyCopy := MyGui.AddButton("x315 y630 w297 h23", L_TIDY_BTN_TIDY_COPY)
@@ -625,6 +625,7 @@ InputTidy() {
   ; Show GUI
   MyGui.Show("AutoSize Center")
   Gui_Edit.Focus()
+  TidyText()
   TidyGUIHwnd := MyGui.Hwnd
 }
 /**
