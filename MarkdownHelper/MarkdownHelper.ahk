@@ -12,7 +12,7 @@
 ;@Ahk2Exe-SetCompanyName TetraTheta
 ;@Ahk2Exe-SetCopyright Copyright 2023. TetraTheta. All rights reserved.
 ;@Ahk2Exe-SetDescription My Hugo Blog Markdown Helper
-;@Ahk2Exe-SetFileVersion 2.0.1.0
+;@Ahk2Exe-SetFileVersion 2.1.0.0
 ;@Ahk2Exe-SetLanguage 0x0412
 ;@Ahk2Exe-SetMainIcon icon_normal.ico ; Default icon
 ;@Ahk2Exe-SetProductName MarkdownHelper
@@ -100,13 +100,27 @@
 ; Ctrl + Alt + N : New Post
 ^!N::
 {
-  global LastIndex, LastTitle
-  R := InputAdvanced(L_NEW_TITLE, L_NEW_MSG, L_NEW_CAT_LABEL, LastIndex, L_NEW_EDIT_LABEL, LastTitle, L_NEW_HELP, , 2)
+  global RecentCategoryIndex, RecentTitle1, RecentTitle2, RecentTitle3, RecentTitle4, RecentTitle5
+  R := InputAdvanced(L_NEW_TITLE, L_NEW_MSG, L_NEW_CAT_LABEL, RecentCategoryIndex, L_NEW_EDIT_LABEL, [RecentTitle1, RecentTitle2, RecentTitle3, RecentTitle4, RecentTitle5], L_NEW_HELP, , 2)
   if (R[1] && R[3] != "" && R[4] != "") {
-    LastIndex := R[2]
-    LastTitle := R[4]
-    IniWrite(LastIndex, GetIniPath(), "New Post", "Last Index")
-    IniWrite(LastTitle, GetIniPath(), "New Post", "Last Title")
+    TMP_RecentCategoryIndex := R[2]
+    TMP_RecentTitle1 := R[4]
+    if (TMP_RecentCategoryIndex != RecentCategoryIndex) {
+      IniWrite(TMP_RecentCategoryIndex, GetIniPath(), "New Post", "Recent Category Index")
+      RecentCategoryIndex := TMP_RecentCategoryIndex
+    }
+    if (TMP_RecentTitle1 != RecentTitle1) {
+      IniWrite(RecentTitle4, GetIniPath(), "New Post", "Recent Title 5")
+      IniWrite(RecentTitle3, GetIniPath(), "New Post", "Recent Title 4")
+      IniWrite(RecentTitle2, GetIniPath(), "New Post", "Recent Title 3")
+      IniWrite(RecentTitle1, GetIniPath(), "New Post", "Recent Title 2")
+      IniWrite(TMP_RecentTitle1, GetIniPath(), "New Post", "Recent Title 1")
+      RecentTitle5 := RecentTitle4
+      RecentTitle4 := RecentTitle3
+      RecentTitle3 := RecentTitle2
+      RecentTitle2 := RecentTitle1
+      RecentTitle1 := TMP_RecentTitle1
+    }
     if (KeepConsole) {
       cmdSwitch := "/k"
     } else {
@@ -136,14 +150,18 @@ TestPageArgs := IniGet("Open Test Page", "Arguments", "")
 NotepadExec := IniGet("Open Tistory Redirect Script", "Executable", "notepad.exe")
 RedirectScriptFilePath := IniGet("Open Tistory Redirect Script", "Redirect Script Path", "")
 ; Runtime variables (will be written back to INI)
-LastIndex := IniGet("New Post", "Last Index", "3")
-LastTitle := IniGet("New Post", "Last Title", "")
+RecentCategoryIndex := IniGet("New Post", "Recent Category Index", "3")
+RecentTitle1 := IniGet("New Post", "Recent Title 1", "")
+RecentTitle2 := IniGet("New Post", "Recent Title 2", "")
+RecentTitle3 := IniGet("New Post", "Recent Title 3", "")
+RecentTitle4 := IniGet("New Post", "Recent Title 4", "")
+RecentTitle5 := IniGet("New Post", "Recent Title 5", "")
 ; Misc variables
 InputGUIHwnd := 0
 TidyGUIHwnd := 0
 ; Sanitize variables
 KeepConsole := (IsNumber(KeepConsole) && KeepConsole == 0) ? 0 : 1
-LastIndex := IsNumber(LastIndex) ? Number(LastIndex) : 3
+RecentCategoryIndex := IsNumber(RecentCategoryIndex) ? Number(RecentCategoryIndex) : 3
 ; ------------------------------------------------------------------------------
 ; Tray Icon & Menu (+functions)
 ; ------------------------------------------------------------------------------
@@ -416,14 +434,13 @@ InputSimpleSingle(aTitle := A_ScriptName, aMessage := "", aLabel := "", aHelp :=
  * @param {String} aLabel1 Label text for the DropDownList control
  * @param {Integer} aDDLIndex Default index of the DropDownList control
  * @param {String} aLabel2 Label text for the Edit control
- * @param {String} aEditDefault Default text for the Edit control
  * @param {String} aHelp Help message for 'Help' button
  * @param {String} aIconFile DLL file that contains icon
  * @param {Integer} aIconIndex Icon index
  * @param {Integer} aTimeout Timeout for the GUI
  * @returns {Array} [R_OK, R_DDL_Idx, R_DDL_Val, R_Edit]
  */
-InputAdvanced(aTitle := A_ScriptName, aMessage := "", aLabel1 := "", aDDLIndex := 0, aLabel2 := "", aEditDefault := "", aHelp := "", aIconFile := "shell32.dll", aIconIndex := 1, aTimeout := 30) {  
+InputAdvanced(aTitle := A_ScriptName, aMessage := "", aLabel1 := "", aDDLIndex := 0, aLabel2 := "", aRecent := [], aHelp := "", aIconFile := "shell32.dll", aIconIndex := 1, aTimeout := 30) {  
   ; Get global variables
   global InputGUIHwnd, KeyValue, L_CANCEL, L_HELP, L_OK
 
@@ -448,8 +465,6 @@ InputAdvanced(aTitle := A_ScriptName, aMessage := "", aLabel1 := "", aDDLIndex :
   kv.Add("The Division", "the-division")
   kv.Add("Tower of Fantasy", "tower-of-fantasy")
   kv.Add("World Quests (Genshin)", "genshin-world")
-  ; _K := ["Archon Quests (Genshin)", "Blue Archive", "Chit Chat", "Default", "Event Quests (Genshin)", "Game Misc", "Genshin Misc", "Honkai: Star Rail", "Minecraft", "Music", "Story Quests (Genshin)", "The Division", "Tower of Fantasy", "World Quests (Genshin)"]
-  ; _V := ["genshin-archon", "blue-archive", "chit-chat", "default", "genshin-event", "game-misc", "genshin-misc", "honkai-star-rail", "minecraft", "music", "genshin-story", "the-division", "tower-of-fantasy", "genshin-world"]
 
   ; Define variables to return
   R_DDL_Idx := aDDLIndex
@@ -480,21 +495,24 @@ InputAdvanced(aTitle := A_ScriptName, aMessage := "", aLabel1 := "", aDDLIndex :
   Gui_Label1 := MyGui.AddText("x12 y78 w460 h19", aLabel1)
   Gui_DDL := MyGui.AddDropDownList("x12 y105 w460 h25 vPostDir Choose" . aDDLIndex . " R200", kv.keys)
   Gui_Label2 := MyGui.AddText("x12 y134 w460 h19", aLabel2)
-  Gui_Edit := MyGui.AddEdit("x12 y157 w460 h25 -Multi", aEditDefault)
+  Gui_CBox := MyGui.AddComboBox("x12 y157 w460 h25 r5 vTitle", aRecent)
   Gui_Help := MyGui.AddButton("x12 y190 w75 h33", L_HELP)
   Gui_OK := MyGui.AddButton("x316 y190 w75 h33 +Default", L_OK)
   Gui_Cancel := MyGui.AddButton("x397 y190 w75 h33", L_CANCEL)
+
+  ; Set default value
+  Gui_CBox.Text := aRecent[1]
 
   ; GUI event
   Gui_OK.OnEvent("Click", ParseControl)
   Gui_Cancel.OnEvent("Click", (*) => (InputGUIHwnd := 0, MyGui.Destroy()))
   ParseControl(*) {
-    if (Gui_Edit.Value == "") {
+    if (Gui_CBox.Text == "") {
       Shake(MyGui)
     } else {
       R_DDL_Idx := Gui_DDL.Value
       R_DDL_Val := kv.values[Gui_DDL.Value]
-      R_Edit := Gui_Edit.Value
+      R_Edit := Gui_CBox.Text
       R_OK := true
       InputGUIHwnd := 0
       MyGui.Destroy()
@@ -508,7 +526,7 @@ InputAdvanced(aTitle := A_ScriptName, aMessage := "", aLabel1 := "", aDDLIndex :
 
   ; Show GUI
   MyGui.Show("AutoSize Center")
-  Gui_Edit.Focus()
+  Gui_CBox.Focus()
   InputGUIHwnd := MyGui.Hwnd
 
   ; Start timer
