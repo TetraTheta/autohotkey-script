@@ -1,3 +1,5 @@
 # Windows script should use CRLF
-*.bat           text eol=crlf
-*.cmd           text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+# AutoHotkey is for Windows
+*.ahk text eol=crlf

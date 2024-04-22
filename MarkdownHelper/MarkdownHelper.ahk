@@ -1,6 +1,10 @@
-/**
- * MarkdownHelper v1.2.0 : My Hugo Blog Markdown Helper
- */
+/************************************************************************
+ * @description My Hugo Blog Markdown Helper
+ * @file MarkdownHelper.ahk
+ * @author TetraTheta
+ * @date 2023/10/22
+ * @version 1.2.0
+ ***********************************************************************/
 #Requires AutoHotkey v2.0
 #Include "..\Lib\darkMode.ahk"
 #Include "..\Lib\ini.ahk"

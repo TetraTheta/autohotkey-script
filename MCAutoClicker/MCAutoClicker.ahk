@@ -1,6 +1,10 @@
-﻿/**
- * MCAutoClicker v2.0.1 : Auto clicker for Minecraft
- */
+﻿/************************************************************************
+ * @description Auto clicker for Minecraft
+ * @file MCAutoClicker.ahk
+ * @author TetraTheta
+ * @date 2022/03/15
+ * @version 2.0.1
+ ***********************************************************************/
 #Requires AutoHotkey v2
 #Include "..\Lib\ini.ahk"
 #SingleInstance Force
