@@ -2,7 +2,7 @@
  * QuickTextInput v2.0.0 : Type predefined text quickly with hotkey
  */
 #Requires AutoHotkey v2
-#Include "..\Lib\ini.ahk"
+#Include "..\..\Lib\ini.ahk"
 #SingleInstance Force
 
 ; Information about executable

@@ -4,7 +4,7 @@
 ; BlueStacks' own Multiple Click cannot be configured to click in short interval and that's why this script does exist
 
 #Requires AutoHotkey v2
-#Include "..\Lib\ini.ahk"
+#Include "..\..\Lib\ini.ahk"
 #SingleInstance Force
 DetectHiddenWindows(True)
 
