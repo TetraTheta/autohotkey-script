@@ -18,7 +18,7 @@
 ;@Ahk2Exe-SetDescription My Hugo Blog Markdown Helper
 ;@Ahk2Exe-SetFileVersion 2.1.0.0
 ;@Ahk2Exe-SetLanguage 0x0412
-;@Ahk2Exe-SetMainIcon icon_normal.ico ; Default icon
+;@Ahk2Exe-SetMainIcon icon\icon_normal.ico ; Default icon
 ;@Ahk2Exe-SetProductName MarkdownHelper
 
 ; ------------------------------------------------------------------------------
@@ -171,7 +171,7 @@ RecentCategoryIndex := IsNumber(RecentCategoryIndex) ? Number(RecentCategoryInde
 ; ------------------------------------------------------------------------------
 A_IconTip := "MarkdownHelper" ; Tray icon tip
 ;@Ahk2Exe-IgnoreBegin
-TraySetIcon("icon_normal.ico")
+TraySetIcon("icon\icon_normal.ico")
 ;@Ahk2Exe-IgnoreEnd
 ; Define misc sub menu
 SubMenuTray := Menu()
@@ -267,7 +267,7 @@ InputSimpleMulti(aTitle := A_ScriptName, aMessage := "", aLabel1 := "", aLabel2 
   TraySetIcon("*")
   */
   ;@Ahk2Exe-IgnoreBegin
-  TraySetIcon("icon_normal.ico")
+  TraySetIcon("icon\icon_normal.ico")
   ;@Ahk2Exe-IgnoreEnd
 
   ; Main GUI
@@ -367,7 +367,7 @@ InputSimpleSingle(aTitle := A_ScriptName, aMessage := "", aLabel := "", aHelp :=
   TraySetIcon("*")
   */
   ;@Ahk2Exe-IgnoreBegin
-  TraySetIcon("icon_normal.ico")
+  TraySetIcon("icon\icon_normal.ico")
   ;@Ahk2Exe-IgnoreEnd
 
   ; GUI option
@@ -483,7 +483,7 @@ InputAdvanced(aTitle := A_ScriptName, aMessage := "", aLabel1 := "", aDDLIndex :
   TraySetIcon("*")
   */
   ;@Ahk2Exe-IgnoreBegin
-  TraySetIcon("icon_normal.ico")
+  TraySetIcon("icon\icon_normal.ico")
   ;@Ahk2Exe-IgnoreEnd
 
   ; GUI option
@@ -574,7 +574,7 @@ InputTidy() {
   TraySetIcon("*")
   */
   ;@Ahk2Exe-IgnoreBegin
-  TraySetIcon("icon_normal.ico")
+  TraySetIcon("icon\icon_normal.ico")
   ;@Ahk2Exe-IgnoreEnd
 
   ; GUI option

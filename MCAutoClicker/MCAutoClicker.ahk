@@ -18,7 +18,7 @@ DetectHiddenWindows(True)
 ;@Ahk2Exe-SetDescription Auto clicker for Minecraft
 ;@Ahk2Exe-SetFileVersion 2.1.0.0
 ;@Ahk2Exe-SetLanguage 0x0412
-;@Ahk2Exe-SetMainIcon icon_normal.ico ; Default icon
+;@Ahk2Exe-SetMainIcon icon\icon_normal.ico ; Default icon
 ;@Ahk2Exe-SetProductName MCAutoClicker
 
 ; ---------------------------------------------------------------------------
@@ -46,7 +46,7 @@ minecraft_hwnd := "" ; Temporary variable because SetTimer can't execute functio
 ; ------------------------------------------------------------------------------
 A_IconTip := "MCAutoClicker" ; Tray icon tip
 ;@Ahk2Exe-IgnoreBegin
-TraySetIcon("icon_normal.ico")
+TraySetIcon("icon\icon_normal.ico")
 ;@Ahk2Exe-IgnoreEnd
 
 ; Create menu
@@ -106,7 +106,7 @@ SuspendScript(ItemName, ItemPos, TheMenu) {
       TraySetIcon(A_ScriptFullPath, -159)
     } else {
       ;@Ahk2Exe-IgnoreBegin
-      TraySetIcon("icon_normal.ico")
+      TraySetIcon("icon\icon_normal.ico")
       ;@Ahk2Exe-IgnoreEnd
     }
   }

@@ -1,5 +1,5 @@
 ﻿/************************************************************************
- * @description Shortcut
+ * @description Sigil Transmute Shortcut for Granblue Fantasy: Relink
  * @author TetraTheta
  * @date 2024/05/11
  * @version 1.0.0
