@@ -469,7 +469,10 @@ InputAdvanced(aTitle := A_ScriptName, aMessage := "", aLabel1 := "", aDDLIndex :
   kv.Add(L_NEW_CAT_DDL_MUSIC, "music")
   kv.Add(L_NEW_CAT_DDL_TD, "the-division")
   kv.Add(L_NEW_CAT_DDL_TOF, "tower-of-fantasy")
+  kv.Add(L_NEW_CAT_DDL_WW_COMPANION, "wuthering-waves-companion")
+  kv.Add(L_NEW_CAT_DDL_WW_EXPLORATION, "wuthering-waves-exploration")
   kv.Add(L_NEW_CAT_DDL_WW_MAIN, "wuthering-waves-main")
+  kv.Add(L_NEW_CAT_DDL_WW_MISC, "wuthering-waves-misc")
 
   ; Define variables to return
   R_DDL_Idx := aDDLIndex

@@ -32,7 +32,10 @@ _l10n_obj := {
     L_NEW_CAT_DDL_MUSIC: "음악",
     L_NEW_CAT_DDL_TD: "더 디비전",
     L_NEW_CAT_DDL_TOF: "타워 오브 판타지",
+    L_NEW_CAT_DDL_WW_COMPANION: "명조 - 얽힌 별 임무",
+    L_NEW_CAT_DDL_WW_EXPLORATION: "명조 - 위험한 임무",
     L_NEW_CAT_DDL_WW_MAIN: "명조 - 조수 임무",
+    L_NEW_CAT_DDL_WW_MISC: "명조 - 기타",
     L_NEW_CAT_LABEL: "카테고리:",
     L_NEW_EDIT_LABEL: "제목:",
     L_NEW_HELP: "* 모든 공백은 '-'로 대체됩니다.`n* 모든 대문자는 소문자로 교체됩니다.",
@@ -80,14 +83,17 @@ _l10n_obj := {
     L_NEW_CAT_DDL_MUSIC: "Music",
     L_NEW_CAT_DDL_TD: "The Division",
     L_NEW_CAT_DDL_TOF: "Tower of Fantasy",
+    L_NEW_CAT_DDL_WW_COMPANION: "Wuthering Waves - Companion Quests",
+    L_NEW_CAT_DDL_WW_EXPLORATION: "Wuthering Waves - Exploration Quests",
     L_NEW_CAT_DDL_WW_MAIN: "Wuthering Waves - Main Quests",
+    L_NEW_CAT_DDL_WW_MISC: "Wuthering Waves - Misc",
     L_NEW_CAT_LABEL: "Category:",
     L_NEW_EDIT_LABEL: "Title:",
     L_NEW_HELP: "* All spaces are replaced by '-'.`n* All capital letters are replaced with lowercase letters.",
     L_NEW_MSG: "Enter a category and name for the new post.",
     L_NEW_TITLE: "Create a New Post",
     L_OK: "OK",
-    L_SINGLE_EDIT_LABEL: "이미지 이름:",
+    L_SINGLE_EDIT_LABEL: "Image file name:",
     L_SINGLE_HELP: "* If the extension is omitted, it will be '.webp'.`n* If the number is less than 3 digits, zeros are added before the file name.",
     L_SINGLE_MSG: "Enter the name of the image file, including the extension.",
     L_SINGLE_TITLE: "Insert Single Image",
@@ -140,7 +146,10 @@ L_NEW_CAT_DDL_MC := _GetLocalization("L_NEW_CAT_DDL_MC")
 L_NEW_CAT_DDL_MUSIC := _GetLocalization("L_NEW_CAT_DDL_MUSIC")
 L_NEW_CAT_DDL_TD := _GetLocalization("L_NEW_CAT_DDL_TD")
 L_NEW_CAT_DDL_TOF := _GetLocalization("L_NEW_CAT_DDL_TOF")
+L_NEW_CAT_DDL_WW_COMPANION := _GetLocalization("L_NEW_CAT_DDL_WW_COMPANION")
+L_NEW_CAT_DDL_WW_EXPLORATION := _GetLocalization("L_NEW_CAT_DDL_WW_EXPLORATION")
 L_NEW_CAT_DDL_WW_MAIN := _GetLocalization("L_NEW_CAT_DDL_WW_MAIN")
+L_NEW_CAT_DDL_WW_MISC := _GetLocalization("L_NEW_CAT_DDL_WW_MISC")
 L_NEW_CAT_LABEL := _GetLocalization("L_NEW_CAT_LABEL")
 L_NEW_EDIT_LABEL := _GetLocalization("L_NEW_EDIT_LABEL")
 L_NEW_HELP := _GetLocalization("L_NEW_HELP")
