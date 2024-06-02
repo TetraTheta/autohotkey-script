@@ -15,4 +15,9 @@ class KeyValue {
       throw IndexError("key not found")
     }
   }
+  Length {
+    Get {
+      return this.keys.Length
+    }
+  }
 }

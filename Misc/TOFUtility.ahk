@@ -8,7 +8,6 @@
 #Requires AutoHotkey v2.0
 #Include "..\Lib\darkMode.ahk"
 #SingleInstance Force
-;@Ahk2Exe-UpdateManifest 1 ; Require administrative privileges
 
 ; Information about executable
 ;@Ahk2Exe-SetCompanyName TetraTheta
@@ -18,6 +17,7 @@
 ;@Ahk2Exe-SetLanguage 0x0412
 ;@Ahk2Exe-SetMainIcon icon\tofutility_icon_normal.ico ; Default icon
 ;@Ahk2Exe-SetProductName TOFUtility
+;@Ahk2Exe-UpdateManifest 1 ; Require administrative privileges
 
 ; ---------------------------------------------------------------------------
 ; Hotkey

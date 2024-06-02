@@ -9,7 +9,7 @@
 #Include "..\Lib\darkMode.ahk"
 #Include "..\Lib\ini.ahk"
 #Include "..\Lib\KV.ahk"
-#include "l10n.ahk"
+#Include "l10n.ahk"
 #SingleInstance Force
 
 ; Information about executable
@@ -247,7 +247,7 @@ SetMenuAttr()
  */
 InputSimpleMulti(aTitle := A_ScriptName, aMessage := "", aLabel1 := "", aLabel2 := "", aHelp := "", aIconFile := "shell32.dll", aIconIndex := 1, aTimeout := 10) {
   ; Get global variables
-  global InputGUIHwnd, L_CANCEL, L_HELP, L_OK
+  global InputGUIHwnd
 
   ; Prevent multiple GUIs to open
   if (InputGUIHwnd != 0) {
@@ -348,7 +348,7 @@ InputSimpleMulti(aTitle := A_ScriptName, aMessage := "", aLabel1 := "", aLabel2 
  */
 InputSimpleSingle(aTitle := A_ScriptName, aMessage := "", aLabel := "", aHelp := "", aIconFile := "shell32.dll", aIconIndex := 1, aTimeout := 10) {
   ; Get global variables
-  global InputGUIHwnd, L_CANCEL, L_HELP, L_OK
+  global InputGUIHwnd
 
   ; Prevent multiple GUIs to open
   if (InputGUIHwnd != 0) {
@@ -446,7 +446,7 @@ InputSimpleSingle(aTitle := A_ScriptName, aMessage := "", aLabel := "", aHelp :=
  */
 InputAdvanced(aTitle := A_ScriptName, aMessage := "", aLabel1 := "", aDDLIndex := 0, aLabel2 := "", aRecent := [], aHelp := "", aIconFile := "shell32.dll", aIconIndex := 1, aTimeout := 30) {  
   ; Get global variables
-  global InputGUIHwnd, KeyValue, L_CANCEL, L_HELP, L_OK
+  global InputGUIHwnd, KeyValue
 
   ; Prevent multiple GUIs to open
   if (InputGUIHwnd != 0) {
@@ -455,20 +455,21 @@ InputAdvanced(aTitle := A_ScriptName, aMessage := "", aLabel1 := "", aDDLIndex :
   }
 
   kv := KeyValue()
-  kv.Add("Archon Quests (Genshin)", "genshin-archon")
-  kv.Add("Blue Archive", "blue-archive")
-  kv.Add("Chit Chat", "chit-chat")
-  kv.Add("Default", "default")
-  kv.Add("Event Quests (Genshin)", "genshin-event")
-  kv.Add("Game Misc", "game-misc")
-  kv.Add("Genshin Misc", "genshin-misc")
-  kv.Add("Honkai: Star Rail", "honkai-star-rail")
-  kv.Add("Minecraft", "minecraft")
-  kv.Add("Music", "music")
-  kv.Add("Story Quests (Genshin)", "genshin-story")
-  kv.Add("The Division", "the-division")
-  kv.Add("Tower of Fantasy", "tower-of-fantasy")
-  kv.Add("World Quests (Genshin)", "genshin-world")
+  kv.Add(L_NEW_CAT_DDL_BA, "blue-archive")
+  kv.Add(L_NEW_CAT_DDL_CC, "chit-chat")
+  kv.Add(L_NEW_CAT_DDL_DEF, "default")
+  kv.Add(L_NEW_CAT_DDL_GAME_MISC, "game-misc")
+  kv.Add(L_NEW_CAT_DDL_GI_ARCHON, "genshin-archon")
+  kv.Add(L_NEW_CAT_DDL_GI_EVENT, "genshin-event")
+  kv.Add(L_NEW_CAT_DDL_GI_MISC, "genshin-misc")
+  kv.Add(L_NEW_CAT_DDL_GI_STORY, "genshin-story")
+  kv.Add(L_NEW_CAT_DDL_GI_WORLD, "genshin-world")
+  kv.Add(L_NEW_CAT_DDL_HSR, "honkai-star-rail")
+  kv.Add(L_NEW_CAT_DDL_MC, "minecraft")
+  kv.Add(L_NEW_CAT_DDL_MUSIC, "music")
+  kv.Add(L_NEW_CAT_DDL_TD, "the-division")
+  kv.Add(L_NEW_CAT_DDL_TOF, "tower-of-fantasy")
+  kv.Add(L_NEW_CAT_DDL_WW_MAIN, "wuthering-waves-main")
 
   ; Define variables to return
   R_DDL_Idx := aDDLIndex
@@ -559,7 +560,7 @@ InputAdvanced(aTitle := A_ScriptName, aMessage := "", aLabel1 := "", aDDLIndex :
  */
 InputTidy() {
   ; Get global variable
-  global L_CANCEL, L_OK, L_TIDY_BTN_TIDY, L_TIDY_BTN_TIDY_COPY, L_TIDY_LENGTH, L_TIDY_TITLE, TidyGUIHwnd
+  global TidyGUIHwnd
 
   ; Prevent multiple GUIs to open
   if (TidyGUIHwnd != 0) {
@@ -656,7 +657,6 @@ InputTidy() {
  * @returns {Integer} `true` if given input is Number
  */
 CheckNumber(input) {
-  global L_ERR_NOT_NUMBER, L_ERR_TITLE
   if (!IsNumber(input)) {
     MsgBox(Format(L_ERR_NOT_NUMBER, input), L_ERR_TITLE, "OK Iconx T3")
     return false
