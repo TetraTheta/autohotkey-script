@@ -44,6 +44,7 @@ XButton2::TakeScreenshot()
 ; Config variables
 ShareXExec := IniGet("Setting", "ShareX Executable", "")
 RunShareXOnLaunch := IniGet("Setting", "Launch ShareX on Launch", false)
+CloseShareXOnExit := IniGet("Setting", "Close ShareX on Exit", false)
 GameCount := IniGet("Setting", "Max Games", 5)
 ;
 GameList := []
@@ -60,7 +61,9 @@ Loop(GameCount) {
 }
 ; Sanitize variables
 RunShareXOnLaunch := (IsNumber(RunShareXOnLaunch) && RunShareXOnLaunch == 0) ? false : true
+CloseShareXOnExit := (IsNumber(CloseShareXOnExit) && CloseShareXOnExit == 0) ? false : true
 ; Misc
+DetectHiddenWindows(true)
 SetKeyDelay(200, 50)
 if (RunShareXOnLaunch) {
   OpenShareX()
@@ -125,3 +128,15 @@ TakeScreenshot() {
   }
   SendEvent("{XButton2}")
 }
+; ------------------------------------------------------------------------------
+; Event
+; ------------------------------------------------------------------------------
+; OnExit : Play ding sound when exit by #SingleInstance Force
+OnExitFunc(ExitReason, ExitCode) {
+  if (ExitReason == "Single" || ExitReason == "Reload") {
+    SoundPlay("*48")
+  } else {
+    WinClose("ahk_exe ShareX.exe")
+  }
+}
+OnExit(OnExitFunc)
