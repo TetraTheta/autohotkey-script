@@ -42,11 +42,11 @@ XButton2::TakeScreenshot()
 ; Variable
 ; ------------------------------------------------------------------------------
 ; Config variables
-ShareXExec := IniGet("Setting", "ShareX Executable", "")
-RunShareXOnLaunch := IniGet("Setting", "Launch ShareX on Launch", false)
-CloseShareXOnExit := IniGet("Setting", "Close ShareX on Exit", false)
 GameCount := IniGet("Setting", "Max Games", 5)
-;
+ShareXExec := IniGet("ShareX", "ShareX Executable", "")
+RunShareXOnLaunch := IniGet("ShareX", "Launch ShareX on Launch", false)
+CloseShareXOnExit := IniGet("ShareX", "Close ShareX on Exit", false)
+HideTaskBar := IniGet("Taskbar", "Hide Taskbar on Game Launch", false)
 GameList := []
 Loop(GameCount) {
   NewName := IniGet("Game", "Game " . A_Index . " Name", "")
@@ -59,9 +59,13 @@ Loop(GameCount) {
     GameList.Push(Game(NewName, NewPath, NewIconPath, NewIconIndex, NewAbsExe, NewAbsTitle))
   }
 }
+; Runtime variable
+InitTBState := GetTBState() ; 0: Always on Top / 1: Auto-hide
+TBState := InitTBState
 ; Sanitize variables
 RunShareXOnLaunch := (IsNumber(RunShareXOnLaunch) && RunShareXOnLaunch == 0) ? false : true
 CloseShareXOnExit := (IsNumber(CloseShareXOnExit) && CloseShareXOnExit == 0) ? false : true
+HideTaskBar := (IsNumber(HideTaskBar) && HideTaskBar == 0) ? false : true
 ; Misc
 DetectHiddenWindows(true)
 SetKeyDelay(200, 50)
@@ -86,8 +90,13 @@ Loop(GameList.Length) {
   MenuTray.SetIcon(NewTitle, GameList[A_Index].IconPath, GameList[A_Index].IconIndex)
 }
 MenuTray.Add()
+MenuTray.Add("AutoHide Taskbar", ToggleTB)
+MenuTray.Add()
 MenuTray.Add("Exit", ExitScript)
 MenuTray.SetIcon("Share&X`tX", ShareXExec)
+if (InitTBState == 1) {
+  MenuTray.Check("AutoHide Taskbar")
+}
 MenuTray.SetIcon("Exit", "imageres.dll", 85)
 ; Set default entry
 MenuTray.Default := "Exit" ; Default action is 'Exit'
@@ -99,6 +108,9 @@ ExitScript(*) {
   ExitApp()
 }
 RunGame(ItemName, ItemPos, *) {
+  if (HideTaskBar) {
+    HideTB(true)
+  }
   GameIndex := ItemPos - 2
   local runcmd := ""
   if (InStr(GameList[GameIndex].Path, "`"") == 1) {
@@ -108,11 +120,39 @@ RunGame(ItemName, ItemPos, *) {
   }
   Run(GameList[GameIndex].Path)
 }
+ToggleTB(ItemName, *) {
+  global TBState
+  if (TBState) {
+    TBState := false
+    HideTB(false)
+    MenuTray.ToggleCheck(ItemName)
+  } else {
+    TBState := true
+    HideTB(true)
+    MenuTray.ToggleCheck(ItemName)
+  }
+}
 ; Dark Context Menu
 SetMenuAttr()
 ; ------------------------------------------------------------------------------
 ; Function
 ; ------------------------------------------------------------------------------
+GetTBState() {
+  static ABM_GETSTATE := 0x4
+  size := A_PtrSize * 3 + 24
+  APPBARDATA := Buffer(size, 0)
+  NumPut("UInt", size, APPBARDATA)
+  return DllCall("Shell32\SHAppBarMessage", "UInt", ABM_GETSTATE, "Ptr", APPBARDATA, "Ptr")
+}
+HideTB(status) {
+  static ABM_SETSTATE := 0xA, ABS_AUTOHIDE := 0x1, ABS_ALWAYSONTOP := 0x2
+  size := A_PtrSize * 3 + 24
+  APPBARDATA := Buffer(size, 0)
+  NumPut("UInt", size, APPBARDATA)
+  NumPut("Ptr", WinExist("ahk_class Shell_TrayWnd"), APPBARDATA, A_PtrSize)
+  NumPut("UInt", status ? ABS_AUTOHIDE : ABS_ALWAYSONTOP, APPBARDATA, size - A_PtrSize)
+  DllCall("Shell32\SHAppBarMessage", "UInt", ABM_SETSTATE, "Ptr", APPBARDATA)
+}
 TakeScreenshot() {
   local activeTitle := WinGetTitle("A")
   local activeExe := WinGetProcessName("A")
@@ -136,7 +176,12 @@ OnExitFunc(ExitReason, ExitCode) {
   if (ExitReason == "Single" || ExitReason == "Reload") {
     SoundPlay("*48")
   } else {
-    WinClose("ahk_exe ShareX.exe")
+    if (HideTaskBar) {
+      HideTB(InitTBState)
+    }
+    if (RunShareXOnLaunch) {
+      WinClose("ahk_exe ShareX.exe")
+    }
   }
 }
 OnExit(OnExitFunc)
