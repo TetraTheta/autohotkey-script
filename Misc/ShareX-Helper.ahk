@@ -108,8 +108,10 @@ ExitScript(*) {
   ExitApp()
 }
 RunGame(ItemName, ItemPos, *) {
+  global TBState
   if (HideTaskBar) {
-    HideTB(true)
+    TBState := 0 ; Temporarily set it to 'Always on Top'
+    ToggleTB("AutoHide Taskbar")
   }
   GameIndex := ItemPos - 2
   local runcmd := ""
@@ -125,11 +127,11 @@ ToggleTB(ItemName, *) {
   if (TBState) {
     TBState := false
     HideTB(false)
-    MenuTray.ToggleCheck(ItemName)
+    MenuTray.Uncheck(ItemName)
   } else {
     TBState := true
     HideTB(true)
-    MenuTray.ToggleCheck(ItemName)
+    MenuTray.Check(ItemName)
   }
 }
 ; Dark Context Menu
@@ -179,7 +181,7 @@ OnExitFunc(ExitReason, ExitCode) {
     if (HideTaskBar) {
       HideTB(InitTBState)
     }
-    if (RunShareXOnLaunch) {
+    if (RunShareXOnLaunch && WinExist("ahk_exe ShareX.exe")) {
       WinClose("ahk_exe ShareX.exe")
     }
   }
