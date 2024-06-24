@@ -130,7 +130,7 @@
     } else {
       cmdSwitch := "/c"
     }
-    args := A_ComSpec . " " . cmdSwitch . " cd /d `"" . WorkingDir . "`" && npm run new " . R[3] . " " . R[4]
+    args := A_ComSpec . " " . cmdSwitch . " cd /d `"" . WorkingDir . "`" && npm run new -- --kind " . R[3] . " " . R[4]
     Run(args, WorkingDir)
   }
 }
