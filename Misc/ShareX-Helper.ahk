@@ -183,6 +183,7 @@ OnExitFunc(ExitReason, ExitCode) {
     }
     if (RunShareXOnLaunch && WinExist("ahk_exe ShareX.exe")) {
       WinClose("ahk_exe ShareX.exe")
+      ProcessClose("ShareX.exe")
     }
   }
 }
