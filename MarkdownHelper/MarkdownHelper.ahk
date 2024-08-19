@@ -3,7 +3,7 @@
  * @file MarkdownHelper.ahk
  * @author TetraTheta
  * @date 2023/10/22
- * @version 1.2.0
+ * @version 2.2.0
  ***********************************************************************/
 #Requires AutoHotkey v2.0
 #Include "..\Lib\darkMode.ahk"
@@ -16,7 +16,7 @@
 ;@Ahk2Exe-SetCompanyName TetraTheta
 ;@Ahk2Exe-SetCopyright Copyright 2023. TetraTheta. All rights reserved.
 ;@Ahk2Exe-SetDescription My Hugo Blog Markdown Helper
-;@Ahk2Exe-SetFileVersion 2.1.0.0
+;@Ahk2Exe-SetFileVersion 2.2.0.0
 ;@Ahk2Exe-SetLanguage 0x0412
 ;@Ahk2Exe-SetMainIcon icon\icon_normal.ico ; Default icon
 ;@Ahk2Exe-SetProductName MarkdownHelper
@@ -173,6 +173,17 @@ A_IconTip := "MarkdownHelper" ; Tray icon tip
 ;@Ahk2Exe-IgnoreBegin
 TraySetIcon("icon\icon_normal.ico")
 ;@Ahk2Exe-IgnoreEnd
+; Define run script sub menu
+RunScriptMenuTray := Menu()
+RunScriptMenuTray.Add("Hugo Module Update`tH", ScriptHugoUpdate)
+RunScriptMenuTray.Add("NPM Module Check Update`tC", ScriptNPMCheckUpdate)
+RunScriptMenuTray.Add("NPM Module Update`tN", ScriptNPMUpdate)
+RunScriptMenuTray.Add()
+RunScriptMenuTray.Add("Publish from Local`tL", ScriptPublishLocal)
+RunScriptMenuTray.SetIcon("Hugo Module Update`tH", "synccenter.dll", 32)
+RunScriptMenuTray.SetIcon("NPM Module Check Update`tC", "synccenter.dll", 1)
+RunScriptMenuTray.SetIcon("NPM Module Update`tN", "synccenter.dll", 32)
+RunScriptMenuTray.SetIcon("Publish from Local`tL", "shell32.dll", 147)
 ; Define misc sub menu
 SubMenuTray := Menu()
 SubMenuTray.Add("Open Tistory Redirect Script`tT", OpenRedirectScript)
@@ -191,6 +202,8 @@ MenuTray.Add()
 MenuTray.Add("Start Hugo Test &Server`tS", RunServer)
 MenuTray.Add("Open Test &Page`tP", OpenPage)
 MenuTray.Add()
+MenuTray.Add("Run Script`tR", RunScriptMenuTray)
+MenuTray.Add()
 MenuTray.Add("Misc`tM", SubMenuTray)
 MenuTray.Add()
 MenuTray.Add("E&xit`tX", ExitScript)
@@ -202,14 +215,14 @@ MenuTray.SetIcon("E&xit`tX", "imageres.dll", 85)
 ; Set default entry
 MenuTray.Default := "E&xit`tX" ; Default action is 'Exit'
 ; Menu function
+ExitScript(*) {
+  ExitApp()
+}
+ListHotkey(*) {
+  ListHotkeys()
+}
 OpenExplorer(*) {
   Run("`"" . ExplorerExec . "`" " . ExplorerArgs)
-}
-OpenTerminal(*) {
-  Run("`"" . CmdExec . "`" " . CmdArgs)
-}
-RunServer(*) {
-  Run("`"" . TestServerExec . "`" " . TestServerArgs, TestServerDir)
 }
 OpenPage(*) {
   Run("`"" . TestPageExec . "`" " . TestPageArgs)
@@ -217,14 +230,26 @@ OpenPage(*) {
 OpenRedirectScript(*) {
   Run("`"" . NotepadExec . "`" " . RedirectScriptFilePath)
 }
+OpenTerminal(*) {
+  Run("`"" . CmdExec . "`" " . CmdArgs)
+}
 ReloadScript(*) {
   Reload()
 }
-ListHotkey(*) {
-  ListHotkeys()
+RunServer(*) {
+  Run("`"" . TestServerExec . "`" " . TestServerArgs, TestServerDir)
 }
-ExitScript(*) {
-  ExitApp()
+ScriptHugoUpdate(*) {
+  Run("`"" . TestServerExec . "`" -Command `"hugo mod get -u ./...;Write-Host '==== DONE ====' -ForegroundColor Green;[void][System.Console]::ReadKey($false)`"", TestServerDir)
+}
+ScriptNPMCheckUpdate(*) {
+  Run("`"" . TestServerExec . "`" -Command `"npm run check-update;Write-Host '==== DONE ====' -ForegroundColor Green;[void][System.Console]::ReadKey($false)`"", TestServerDir)
+}
+ScriptNPMUpdate(*) {
+  Run("`"" . TestServerExec . "`" -Command `"npm install;Write-Host '==== DONE ====' -ForegroundColor Green;[void][System.Console]::ReadKey($false)`"", TestServerDir)
+}
+ScriptPublishLocal(*) {
+  Run("`"" . TestServerExec . "`" -Command `"npm run publish.local;Write-Host '==== DONE ====' -ForegroundColor Green;[void][System.Console]::ReadKey($false)`"", TestServerDir)
 }
 ; Dark Context Menu
 SetMenuAttr()
@@ -470,6 +495,7 @@ InputAdvanced(aTitle := A_ScriptName, aMessage := "", aLabel1 := "", aDDLIndex :
   kv.Add(L_NEW_CAT_DDL_TD, "the-division")
   kv.Add(L_NEW_CAT_DDL_TOF, "tower-of-fantasy")
   kv.Add(L_NEW_CAT_DDL_WW_COMPANION, "wuthering-waves-companion")
+  kv.Add(L_NEW_CAT_DDL_WW_EVENT, "wuthering-waves-event")
   kv.Add(L_NEW_CAT_DDL_WW_EXPLORATION, "wuthering-waves-exploration")
   kv.Add(L_NEW_CAT_DDL_WW_MAIN, "wuthering-waves-main")
   kv.Add(L_NEW_CAT_DDL_WW_MISC, "wuthering-waves-misc")

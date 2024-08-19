@@ -1,4 +1,4 @@
-; These values don't need to be declared with 'global' in functions.
+; Since these values are read-only, they don't need to be declared with 'global' in functions.
 _l10n_obj := {
   0412: {
     L_CANCEL: "취소",
@@ -33,6 +33,7 @@ _l10n_obj := {
     L_NEW_CAT_DDL_TD: "더 디비전",
     L_NEW_CAT_DDL_TOF: "타워 오브 판타지",
     L_NEW_CAT_DDL_WW_COMPANION: "명조 - 얽힌 별 임무",
+    L_NEW_CAT_DDL_WW_EVENT: "명조 - 이벤트 임무",
     L_NEW_CAT_DDL_WW_EXPLORATION: "명조 - 위험한 임무",
     L_NEW_CAT_DDL_WW_MAIN: "명조 - 조수 임무",
     L_NEW_CAT_DDL_WW_MISC: "명조 - 기타",
@@ -84,6 +85,7 @@ _l10n_obj := {
     L_NEW_CAT_DDL_TD: "The Division",
     L_NEW_CAT_DDL_TOF: "Tower of Fantasy",
     L_NEW_CAT_DDL_WW_COMPANION: "Wuthering Waves - Companion Quests",
+    L_NEW_CAT_DDL_WW_EVENT: "Wuthering Waves - Event Quests",
     L_NEW_CAT_DDL_WW_EXPLORATION: "Wuthering Waves - Exploration Quests",
     L_NEW_CAT_DDL_WW_MAIN: "Wuthering Waves - Main Quests",
     L_NEW_CAT_DDL_WW_MISC: "Wuthering Waves - Misc",
@@ -147,6 +149,7 @@ L_NEW_CAT_DDL_MUSIC := _GetLocalization("L_NEW_CAT_DDL_MUSIC")
 L_NEW_CAT_DDL_TD := _GetLocalization("L_NEW_CAT_DDL_TD")
 L_NEW_CAT_DDL_TOF := _GetLocalization("L_NEW_CAT_DDL_TOF")
 L_NEW_CAT_DDL_WW_COMPANION := _GetLocalization("L_NEW_CAT_DDL_WW_COMPANION")
+L_NEW_CAT_DDL_WW_EVENT := _GetLocalization("L_NEW_CAT_DDL_WW_EVENT")
 L_NEW_CAT_DDL_WW_EXPLORATION := _GetLocalization("L_NEW_CAT_DDL_WW_EXPLORATION")
 L_NEW_CAT_DDL_WW_MAIN := _GetLocalization("L_NEW_CAT_DDL_WW_MAIN")
 L_NEW_CAT_DDL_WW_MISC := _GetLocalization("L_NEW_CAT_DDL_WW_MISC")
