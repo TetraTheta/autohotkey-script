@@ -30,6 +30,11 @@ _l10n_obj := {
     L_NEW_CAT_DDL_HSR: "붕괴: 스타레일",
     L_NEW_CAT_DDL_MC: "마인크래프트",
     L_NEW_CAT_DDL_MUSIC: "음악",
+    L_NEW_CAT_DDL_PIVOX_DESKTOP: "PIVOX - 데스크탑",
+    L_NEW_CAT_DDL_PIVOX_MISC: "PIVOX - 기타",
+    L_NEW_CAT_DDL_PIVOX_MOBILE: "PIVOX - 모바일",
+    L_NEW_CAT_DDL_PIVOX_SERVER: "PIVOX - 서버",
+    L_NEW_CAT_DDL_PIVOX_WEB: "PIVOX - 웹",
     L_NEW_CAT_DDL_TD: "더 디비전",
     L_NEW_CAT_DDL_TOF: "타워 오브 판타지",
     L_NEW_CAT_DDL_WW_COMPANION: "명조 - 얽힌 별 임무",
@@ -82,6 +87,11 @@ _l10n_obj := {
     L_NEW_CAT_DDL_HSR: "Honkai: Star Rail",
     L_NEW_CAT_DDL_MC: "Minecraft",
     L_NEW_CAT_DDL_MUSIC: "Music",
+    L_NEW_CAT_DDL_PIVOX_DESKTOP: "PIVOX - Desktop",
+    L_NEW_CAT_DDL_PIVOX_MISC: "PIVOX - Misc",
+    L_NEW_CAT_DDL_PIVOX_MOBILE: "PIVOX - Mobile",
+    L_NEW_CAT_DDL_PIVOX_SERVER: "PIVOX - Server",
+    L_NEW_CAT_DDL_PIVOX_WEB: "PIVOX - Web",
     L_NEW_CAT_DDL_TD: "The Division",
     L_NEW_CAT_DDL_TOF: "Tower of Fantasy",
     L_NEW_CAT_DDL_WW_COMPANION: "Wuthering Waves - Companion Quests",
@@ -146,6 +156,11 @@ L_NEW_CAT_DDL_GI_WORLD := _GetLocalization("L_NEW_CAT_DDL_GI_WORLD")
 L_NEW_CAT_DDL_HSR := _GetLocalization("L_NEW_CAT_DDL_HSR")
 L_NEW_CAT_DDL_MC := _GetLocalization("L_NEW_CAT_DDL_MC")
 L_NEW_CAT_DDL_MUSIC := _GetLocalization("L_NEW_CAT_DDL_MUSIC")
+L_NEW_CAT_DDL_PIVOX_DESKTOP := _GetLocalization("L_NEW_CAT_DDL_PIVOX_DESKTOP")
+L_NEW_CAT_DDL_PIVOX_MISC := _GetLocalization("L_NEW_CAT_DDL_PIVOX_MISC")
+L_NEW_CAT_DDL_PIVOX_MOBILE := _GetLocalization("L_NEW_CAT_DDL_PIVOX_MOBILE")
+L_NEW_CAT_DDL_PIVOX_SERVER := _GetLocalization("L_NEW_CAT_DDL_PIVOX_SERVER")
+L_NEW_CAT_DDL_PIVOX_WEB := _GetLocalization("L_NEW_CAT_DDL_PIVOX_WEB")
 L_NEW_CAT_DDL_TD := _GetLocalization("L_NEW_CAT_DDL_TD")
 L_NEW_CAT_DDL_TOF := _GetLocalization("L_NEW_CAT_DDL_TOF")
 L_NEW_CAT_DDL_WW_COMPANION := _GetLocalization("L_NEW_CAT_DDL_WW_COMPANION")
