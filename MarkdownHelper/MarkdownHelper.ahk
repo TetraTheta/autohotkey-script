@@ -3,7 +3,7 @@
  * @file MarkdownHelper.ahk
  * @author TetraTheta
  * @date 2023/10/22
- * @version 2.2.0
+ * @version 2.2.1
  ***********************************************************************/
 #Requires AutoHotkey v2.0
 #Include "..\Lib\darkMode.ahk"
@@ -16,7 +16,7 @@
 ;@Ahk2Exe-SetCompanyName TetraTheta
 ;@Ahk2Exe-SetCopyright Copyright 2023. TetraTheta. All rights reserved.
 ;@Ahk2Exe-SetDescription My Hugo Blog Markdown Helper
-;@Ahk2Exe-SetFileVersion 2.2.0.0
+;@Ahk2Exe-SetFileVersion 2.2.1.0
 ;@Ahk2Exe-SetLanguage 0x0412
 ;@Ahk2Exe-SetMainIcon icon\icon_normal.ico ; Default icon
 ;@Ahk2Exe-SetProductName MarkdownHelper
@@ -240,7 +240,7 @@ RunServer(*) {
   Run("`"" . TestServerExec . "`" " . TestServerArgs, TestServerDir)
 }
 ScriptHugoUpdate(*) {
-  Run("`"" . TestServerExec . "`" -Command `"hugo mod get -u ./...;Write-Host '==== DONE ====' -ForegroundColor Green;[void][System.Console]::ReadKey($false)`"", TestServerDir)
+  Run("`"" . TestServerExec . "`" -Command `"hugo mod get -u ./...;hugo mod tidy;Write-Host '==== DONE ====' -ForegroundColor Green;[void][System.Console]::ReadKey($false)`"", TestServerDir)
 }
 ScriptNPMCheckUpdate(*) {
   Run("`"" . TestServerExec . "`" -Command `"npm run check-update;Write-Host '==== DONE ====' -ForegroundColor Green;[void][System.Console]::ReadKey($false)`"", TestServerDir)
