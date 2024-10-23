@@ -16,8 +16,6 @@ class KeyValue {
     }
   }
   Length {
-    Get {
-      return this.keys.Length
-    }
+    get => this.keys.Length
   }
 }
