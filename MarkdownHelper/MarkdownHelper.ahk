@@ -246,7 +246,7 @@ ScriptNPMCheckUpdate(*) {
   Run("`"" . TestServerExec . "`" -Command `"npm run check-update;Write-Host '==== DONE ====' -ForegroundColor Green;[void][System.Console]::ReadKey($false)`"", TestServerDir)
 }
 ScriptNPMUpdate(*) {
-  Run("`"" . TestServerExec . "`" -Command `"npm install;Write-Host '==== DONE ====' -ForegroundColor Green;[void][System.Console]::ReadKey($false)`"", TestServerDir)
+  Run("`"" . TestServerExec . "`" -Command `"npm update;npm install --package-lock-only;Write-Host '==== DONE ====' -ForegroundColor Green;[void][System.Console]::ReadKey($false)`"", TestServerDir)
 }
 ScriptPublishLocal(*) {
   Run("`"" . TestServerExec . "`" -Command `"npm run publish.local;Write-Host '==== DONE ====' -ForegroundColor Green;[void][System.Console]::ReadKey($false)`"", TestServerDir)
