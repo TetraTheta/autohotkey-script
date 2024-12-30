@@ -3,7 +3,7 @@
  * @file MCAutoClicker.ahk
  * @author TetraTheta
  * @date 2022/03/15
- * @version 2.0.1
+ * @version 2.2.0
  ***********************************************************************/
 #Requires AutoHotkey v2
 #Include "..\Lib\ini.ahk"
@@ -12,11 +12,11 @@ InstallMouseHook(True, True)
 DetectHiddenWindows(True)
 
 ; Information about executable
-;@Ahk2Exe-AddResource icon_grey.ico, 206 ; Suspend icon - Gray
+;@Ahk2Exe-AddResource icon\icon_grey.ico, 206 ; Suspend icon - Gray
 ;@Ahk2Exe-SetCompanyName TetraTheta
 ;@Ahk2Exe-SetCopyright Copyright 2023. TetraTheta. All rights reserved.
 ;@Ahk2Exe-SetDescription Auto clicker for Minecraft
-;@Ahk2Exe-SetFileVersion 2.1.0.0
+;@Ahk2Exe-SetFileVersion 2.2.0.0
 ;@Ahk2Exe-SetLanguage 0x0412
 ;@Ahk2Exe-SetMainIcon icon\icon_normal.ico ; Default icon
 ;@Ahk2Exe-SetProductName MCAutoClicker
@@ -62,11 +62,12 @@ MenuTraySub.Add() ; Create separator
 MenuTraySub.Add("Suspend Script`tS", SuspendScript)
 ; Menu
 MenuTray.Add("&Hotkey List`tH", ShowHotkey)
-MenuTray.Default := "&Hotkey List`tH"
 MenuTray.Add() ; Create separator
 MenuTray.Add("Advanced Menu`tA", MenuTraySub)
 MenuTray.Add() ; Create separator
 MenuTray.Add("Exit Script`tX", ExitScript)
+; Set default entry
+MenuTray.Default := "Exit Script`tX" ; Default action is 'Exit'
 
 ; ------------------------------------------------------------------------------
 ; Function
@@ -94,7 +95,7 @@ SuspendScript(ItemName, ItemPos, TheMenu) {
       TraySetIcon(A_ScriptFullPath, -206)
     } else {
       ;@Ahk2Exe-IgnoreBegin
-      TraySetIcon("icon_grey.ico")
+      TraySetIcon("icon\icon_grey.ico")
       ;@Ahk2Exe-IgnoreEnd
     }
   } else {
