@@ -3,7 +3,7 @@
  * @file MarkdownHelper.ahk
  * @author TetraTheta
  * @date 2023/10/22
- * @version 2.2.1
+ * @version 2.2.2
  ***********************************************************************/
 #Requires AutoHotkey v2.0
 #Include "..\Lib\darkMode.ahk"
@@ -16,7 +16,7 @@
 ;@Ahk2Exe-SetCompanyName TetraTheta
 ;@Ahk2Exe-SetCopyright Copyright 2023. TetraTheta. All rights reserved.
 ;@Ahk2Exe-SetDescription My Hugo Blog Markdown Helper
-;@Ahk2Exe-SetFileVersion 2.2.1.0
+;@Ahk2Exe-SetFileVersion 2.2.2.0
 ;@Ahk2Exe-SetLanguage 0x0412
 ;@Ahk2Exe-SetMainIcon icon\icon_normal.ico ; Default icon
 ;@Ahk2Exe-SetProductName MarkdownHelper
@@ -153,6 +153,7 @@ TestPageExec := IniGet("Open Test Page", "Browser Executable", "firefox.exe")
 TestPageArgs := IniGet("Open Test Page", "Arguments", "")
 NotepadExec := IniGet("Open Tistory Redirect Script", "Executable", "notepad.exe")
 RedirectScriptFilePath := IniGet("Open Tistory Redirect Script", "Redirect Script Path", "")
+SourceGitPath := IniGet("Open SourceGit", "Executable", "")
 ; Runtime variables (will be written back to INI)
 RecentCategoryIndex := IniGet("New Post", "Recent Category Index", "3")
 RecentTitle1 := IniGet("New Post", "Recent Title 1", "")
@@ -178,19 +179,19 @@ RunScriptMenuTray := Menu()
 RunScriptMenuTray.Add("Hugo Module Update`tH", ScriptHugoUpdate)
 RunScriptMenuTray.Add("NPM Module Check Update`tC", ScriptNPMCheckUpdate)
 RunScriptMenuTray.Add("NPM Module Update`tN", ScriptNPMUpdate)
-RunScriptMenuTray.Add()
-RunScriptMenuTray.Add("Publish from Local`tL", ScriptPublishLocal)
+; RunScriptMenuTray.Add()
+; RunScriptMenuTray.Add("Publish from Local`tL", ScriptPublishLocal)
 RunScriptMenuTray.SetIcon("Hugo Module Update`tH", "synccenter.dll", 32)
 RunScriptMenuTray.SetIcon("NPM Module Check Update`tC", "synccenter.dll", 1)
 RunScriptMenuTray.SetIcon("NPM Module Update`tN", "synccenter.dll", 32)
-RunScriptMenuTray.SetIcon("Publish from Local`tL", "shell32.dll", 147)
+; RunScriptMenuTray.SetIcon("Publish from Local`tL", "shell32.dll", 147)
 ; Define misc sub menu
 SubMenuTray := Menu()
-SubMenuTray.Add("Open Tistory Redirect Script`tT", OpenRedirectScript)
-SubMenuTray.Add()
+; SubMenuTray.Add("Open Tistory Redirect Script`tT", OpenRedirectScript)
+; SubMenuTray.Add()
 SubMenuTray.Add("Reload`tR", ReloadScript)
 SubMenuTray.Add("List Hotkeys`tH", ListHotkey)
-SubMenuTray.SetIcon("Open Tistory Redirect Script`tT", "imageres.dll", 15)
+; SubMenuTray.SetIcon("Open Tistory Redirect Script`tT", "imageres.dll", 15)
 SubMenuTray.SetIcon("Reload`tR", "imageres.dll", 230)
 SubMenuTray.SetIcon("List Hotkeys`tH", "shell32.dll", 2)
 ; Re-define tray menu
@@ -198,6 +199,7 @@ MenuTray := A_TrayMenu
 MenuTray.Delete() ; Reset tray menu
 MenuTray.Add("Open &Explorer`tE", OpenExplorer)
 MenuTray.Add("Open &Terminal`tT", OpenTerminal)
+MenuTray.Add("Open Source&Git`tG", OpenSourceGit)
 MenuTray.Add()
 MenuTray.Add("Start Hugo Test &Server`tS", RunServer)
 MenuTray.Add("Open Test &Page`tP", OpenPage)
@@ -209,6 +211,7 @@ MenuTray.Add()
 MenuTray.Add("E&xit`tX", ExitScript)
 MenuTray.SetIcon("Open &Explorer`tE", "imageres.dll", 4)
 MenuTray.SetIcon("Open &Terminal`tT", "imageres.dll", 264)
+MenuTray.SetIcon("Open Source&Git`tG", SourceGitPath, 0)
 MenuTray.SetIcon("Start Hugo Test &Server`tS", "imageres.dll", 264)
 MenuTray.SetIcon("Open Test &Page`tP", "netshell.dll", 86)
 MenuTray.SetIcon("E&xit`tX", "imageres.dll", 85)
@@ -229,6 +232,9 @@ OpenPage(*) {
 }
 OpenRedirectScript(*) {
   Run("`"" . NotepadExec . "`" " . RedirectScriptFilePath)
+}
+OpenSourceGit(*) {
+  Run("`"" . SourceGitPath . "`" " . WorkingDir)
 }
 OpenTerminal(*) {
   Run("`"" . CmdExec . "`" " . CmdArgs)
@@ -471,7 +477,7 @@ InputSimpleSingle(aTitle := A_ScriptName, aMessage := "", aLabel := "", aHelp :=
  */
 InputAdvanced(aTitle := A_ScriptName, aMessage := "", aLabel1 := "", aDDLIndex := 0, aLabel2 := "", aRecent := [], aHelp := "", aIconFile := "shell32.dll", aIconIndex := 1, aTimeout := 30) {  
   ; Get global variables
-  global InputGUIHwnd, KeyValue
+  global InputGUIHwnd
 
   ; Prevent multiple GUIs to open
   if (InputGUIHwnd != 0) {
