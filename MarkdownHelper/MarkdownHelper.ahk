@@ -499,6 +499,7 @@ InputAdvanced(aTitle := A_ScriptName, aMessage := "", aLabel1 := "", aDDLIndex :
   kv.Add(L_NEW_CAT_DDL_MC, "minecraft")
   kv.Add(L_NEW_CAT_DDL_MUSIC, "music")
   kv.Add(L_NEW_CAT_DDL_PIVOX_DESKTOP, "pivox-desktop")
+  kv.Add(L_NEW_CAT_DDL_PIVOX_GAME, "pivox-game")
   kv.Add(L_NEW_CAT_DDL_PIVOX_MISC, "pivox-misc")
   kv.Add(L_NEW_CAT_DDL_PIVOX_MOBILE, "pivox-mobile")
   kv.Add(L_NEW_CAT_DDL_PIVOX_SERVER, "pivox-server")
