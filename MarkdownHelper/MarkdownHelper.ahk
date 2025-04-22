@@ -1,9 +1,8 @@
 /************************************************************************
  * @description My Hugo Blog Markdown Helper
- * @file MarkdownHelper.ahk
  * @author TetraTheta
  * @date 2023/10/22
- * @version 2.2.2
+ * @version 2.3.0
  ***********************************************************************/
 #Requires AutoHotkey v2.0
 #Include "..\Lib\darkMode.ahk"
@@ -14,9 +13,9 @@
 
 ; Information about executable
 ;@Ahk2Exe-SetCompanyName TetraTheta
-;@Ahk2Exe-SetCopyright Copyright 2023. TetraTheta. All rights reserved.
+;@Ahk2Exe-SetCopyright Copyright (c) 2023. TetraTheta. All rights reserved.
 ;@Ahk2Exe-SetDescription My Hugo Blog Markdown Helper
-;@Ahk2Exe-SetFileVersion 2.2.2.0
+;@Ahk2Exe-SetFileVersion 2.3.0.0
 ;@Ahk2Exe-SetLanguage 0x0412
 ;@Ahk2Exe-SetMainIcon icon\icon_normal.ico ; Default icon
 ;@Ahk2Exe-SetProductName MarkdownHelper
@@ -130,7 +129,7 @@
     } else {
       cmdSwitch := "/c"
     }
-    args := A_ComSpec . " " . cmdSwitch . " cd /d `"" . WorkingDir . "`" && npm run new -- --kind " . R[3] . " " . R[4]
+    args := A_ComSpec . " " . cmdSwitch . " cd /d `"" . WorkingDir . "`" && bun run cli new -k " . R[3] . " `"" . R[4] . "`""
     Run(args, WorkingDir)
   }
 }
@@ -167,6 +166,33 @@ TidyGUIHwnd := 0
 ; Sanitize variables
 KeepConsole := (IsNumber(KeepConsole) && KeepConsole == 0) ? 0 : 1
 RecentCategoryIndex := IsNumber(RecentCategoryIndex) ? Number(RecentCategoryIndex) : 3
+; KeyValue
+kv := KeyValue()
+kv.Add(L_NEW_CAT_DDL_BA, "blue-archive")
+kv.Add(L_NEW_CAT_DDL_CC, "chit-chat")
+kv.Add(L_NEW_CAT_DDL_DEF, "default")
+kv.Add(L_NEW_CAT_DDL_GAME_MISC, "game-misc")
+kv.Add(L_NEW_CAT_DDL_GI_ARCHON, "genshin-archon")
+kv.Add(L_NEW_CAT_DDL_GI_EVENT, "genshin-event")
+kv.Add(L_NEW_CAT_DDL_GI_MISC, "genshin-misc")
+kv.Add(L_NEW_CAT_DDL_GI_STORY, "genshin-story")
+kv.Add(L_NEW_CAT_DDL_GI_WORLD, "genshin-world")
+kv.Add(L_NEW_CAT_DDL_HSR, "honkai-star-rail")
+kv.Add(L_NEW_CAT_DDL_MC, "minecraft")
+kv.Add(L_NEW_CAT_DDL_MUSIC, "music")
+kv.Add(L_NEW_CAT_DDL_PIVOX_DESKTOP, "pivox-desktop")
+kv.Add(L_NEW_CAT_DDL_PIVOX_GAME, "pivox-game")
+kv.Add(L_NEW_CAT_DDL_PIVOX_MISC, "pivox-misc")
+kv.Add(L_NEW_CAT_DDL_PIVOX_MOBILE, "pivox-mobile")
+kv.Add(L_NEW_CAT_DDL_PIVOX_SERVER, "pivox-server")
+kv.Add(L_NEW_CAT_DDL_PIVOX_WEB, "pivox-web")
+kv.Add(L_NEW_CAT_DDL_TD, "the-division")
+kv.Add(L_NEW_CAT_DDL_TOF, "tower-of-fantasy")
+kv.Add(L_NEW_CAT_DDL_WW_COMPANION, "wuwa-companion")
+kv.Add(L_NEW_CAT_DDL_WW_EVENT, "wuwa-event")
+kv.Add(L_NEW_CAT_DDL_WW_EXPLORATION, "wuwa-exploration")
+kv.Add(L_NEW_CAT_DDL_WW_MAIN, "wuwa-main")
+kv.Add(L_NEW_CAT_DDL_WW_MISC, "wuwa-misc")
 ; ------------------------------------------------------------------------------
 ; Tray Icon & Menu (+functions)
 ; ------------------------------------------------------------------------------
@@ -177,21 +203,16 @@ TraySetIcon("icon\icon_normal.ico")
 ; Define run script sub menu
 RunScriptMenuTray := Menu()
 RunScriptMenuTray.Add("Hugo Module Update`tH", ScriptHugoUpdate)
-RunScriptMenuTray.Add("NPM Module Check Update`tC", ScriptNPMCheckUpdate)
-RunScriptMenuTray.Add("NPM Module Update`tN", ScriptNPMUpdate)
-; RunScriptMenuTray.Add()
-; RunScriptMenuTray.Add("Publish from Local`tL", ScriptPublishLocal)
+RunScriptMenuTray.Add("Bun Module Update`tB", ScriptBunUpdate)
+RunScriptMenuTray.Add()
+RunScriptMenuTray.Add("Hugo Mod Tidy`tT", ScriptHugoTidy)
 RunScriptMenuTray.SetIcon("Hugo Module Update`tH", "synccenter.dll", 32)
-RunScriptMenuTray.SetIcon("NPM Module Check Update`tC", "synccenter.dll", 1)
-RunScriptMenuTray.SetIcon("NPM Module Update`tN", "synccenter.dll", 32)
-; RunScriptMenuTray.SetIcon("Publish from Local`tL", "shell32.dll", 147)
+RunScriptMenuTray.SetIcon("Bun Module Update`tB", "synccenter.dll", 32)
 ; Define misc sub menu
 SubMenuTray := Menu()
-; SubMenuTray.Add("Open Tistory Redirect Script`tT", OpenRedirectScript)
 ; SubMenuTray.Add()
-SubMenuTray.Add("Reload`tR", ReloadScript)
+SubMenuTray.Add("Reload`tR", (*) => Reload())
 SubMenuTray.Add("List Hotkeys`tH", ListHotkey)
-; SubMenuTray.SetIcon("Open Tistory Redirect Script`tT", "imageres.dll", 15)
 SubMenuTray.SetIcon("Reload`tR", "imageres.dll", 230)
 SubMenuTray.SetIcon("List Hotkeys`tH", "shell32.dll", 2)
 ; Re-define tray menu
@@ -208,7 +229,7 @@ MenuTray.Add("Run Script`tR", RunScriptMenuTray)
 MenuTray.Add()
 MenuTray.Add("Misc`tM", SubMenuTray)
 MenuTray.Add()
-MenuTray.Add("E&xit`tX", ExitScript)
+MenuTray.Add("E&xit`tX", (*) => ExitApp())
 MenuTray.SetIcon("Open &Explorer`tE", "imageres.dll", 4)
 MenuTray.SetIcon("Open &Terminal`tT", "imageres.dll", 264)
 MenuTray.SetIcon("Open Source&Git`tG", SourceGitPath, 0)
@@ -218,9 +239,6 @@ MenuTray.SetIcon("E&xit`tX", "imageres.dll", 85)
 ; Set default entry
 MenuTray.Default := "E&xit`tX" ; Default action is 'Exit'
 ; Menu function
-ExitScript(*) {
-  ExitApp()
-}
 ListHotkey(*) {
   ListHotkeys()
 }
@@ -239,23 +257,17 @@ OpenSourceGit(*) {
 OpenTerminal(*) {
   Run("`"" . CmdExec . "`" " . CmdArgs)
 }
-ReloadScript(*) {
-  Reload()
-}
 RunServer(*) {
   Run("`"" . TestServerExec . "`" " . TestServerArgs, TestServerDir)
 }
+ScriptBunUpdate(*) {
+  Run("`"" . TestServerExec . "`" -Command `"bun outdated;bun update;bun install --lockfile-only;Write-Host '==== DONE ====' -ForegroundColor Green;[void][System.Console]::ReadKey($false)`"", TestServerDir)
+}
+ScriptHugoTidy(*) {
+  Run("`"" . TestServerExec . "`" -Command `"hugo mod tidy;Write-Host '==== DONE ====' -ForegroundColor Green;[void][System.Console]::ReadKey($false)`"", TestServerDir)
+}
 ScriptHugoUpdate(*) {
   Run("`"" . TestServerExec . "`" -Command `"hugo mod get -u ./...;hugo mod tidy;Write-Host '==== DONE ====' -ForegroundColor Green;[void][System.Console]::ReadKey($false)`"", TestServerDir)
-}
-ScriptNPMCheckUpdate(*) {
-  Run("`"" . TestServerExec . "`" -Command `"npm run check-update;Write-Host '==== DONE ====' -ForegroundColor Green;[void][System.Console]::ReadKey($false)`"", TestServerDir)
-}
-ScriptNPMUpdate(*) {
-  Run("`"" . TestServerExec . "`" -Command `"npm update;npm install --package-lock-only;Write-Host '==== DONE ====' -ForegroundColor Green;[void][System.Console]::ReadKey($false)`"", TestServerDir)
-}
-ScriptPublishLocal(*) {
-  Run("`"" . TestServerExec . "`" -Command `"npm run publish.local;Write-Host '==== DONE ====' -ForegroundColor Green;[void][System.Console]::ReadKey($false)`"", TestServerDir)
 }
 ; Dark Context Menu
 SetMenuAttr()
@@ -477,40 +489,13 @@ InputSimpleSingle(aTitle := A_ScriptName, aMessage := "", aLabel := "", aHelp :=
  */
 InputAdvanced(aTitle := A_ScriptName, aMessage := "", aLabel1 := "", aDDLIndex := 0, aLabel2 := "", aRecent := [], aHelp := "", aIconFile := "shell32.dll", aIconIndex := 1, aTimeout := 30) {  
   ; Get global variables
-  global InputGUIHwnd
+  global InputGUIHwnd, kv
 
   ; Prevent multiple GUIs to open
   if (InputGUIHwnd != 0) {
     WinActivate("ahk_id " . InputGUIHwnd)
     return [false, 0, "", ""]
   }
-
-  kv := KeyValue()
-  kv.Add(L_NEW_CAT_DDL_BA, "blue-archive")
-  kv.Add(L_NEW_CAT_DDL_CC, "chit-chat")
-  kv.Add(L_NEW_CAT_DDL_DEF, "default")
-  kv.Add(L_NEW_CAT_DDL_GAME_MISC, "game-misc")
-  kv.Add(L_NEW_CAT_DDL_GI_ARCHON, "genshin-archon")
-  kv.Add(L_NEW_CAT_DDL_GI_EVENT, "genshin-event")
-  kv.Add(L_NEW_CAT_DDL_GI_MISC, "genshin-misc")
-  kv.Add(L_NEW_CAT_DDL_GI_STORY, "genshin-story")
-  kv.Add(L_NEW_CAT_DDL_GI_WORLD, "genshin-world")
-  kv.Add(L_NEW_CAT_DDL_HSR, "honkai-star-rail")
-  kv.Add(L_NEW_CAT_DDL_MC, "minecraft")
-  kv.Add(L_NEW_CAT_DDL_MUSIC, "music")
-  kv.Add(L_NEW_CAT_DDL_PIVOX_DESKTOP, "pivox-desktop")
-  kv.Add(L_NEW_CAT_DDL_PIVOX_GAME, "pivox-game")
-  kv.Add(L_NEW_CAT_DDL_PIVOX_MISC, "pivox-misc")
-  kv.Add(L_NEW_CAT_DDL_PIVOX_MOBILE, "pivox-mobile")
-  kv.Add(L_NEW_CAT_DDL_PIVOX_SERVER, "pivox-server")
-  kv.Add(L_NEW_CAT_DDL_PIVOX_WEB, "pivox-web")
-  kv.Add(L_NEW_CAT_DDL_TD, "the-division")
-  kv.Add(L_NEW_CAT_DDL_TOF, "tower-of-fantasy")
-  kv.Add(L_NEW_CAT_DDL_WW_COMPANION, "wuthering-waves-companion")
-  kv.Add(L_NEW_CAT_DDL_WW_EVENT, "wuthering-waves-event")
-  kv.Add(L_NEW_CAT_DDL_WW_EXPLORATION, "wuthering-waves-exploration")
-  kv.Add(L_NEW_CAT_DDL_WW_MAIN, "wuthering-waves-main")
-  kv.Add(L_NEW_CAT_DDL_WW_MISC, "wuthering-waves-misc")
 
   ; Define variables to return
   R_DDL_Idx := aDDLIndex
