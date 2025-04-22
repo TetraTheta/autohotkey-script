@@ -1,6 +1,5 @@
 /************************************************************************
  * @description Utility for Tower of Fantasy
- * @file TOFUtility.ahk
  * @author TetraTheta
  * @date 2024/02/26
  * @version 1.0.0
@@ -91,11 +90,9 @@ TraySetIcon("icon\tofutility_icon_normal.ico")
 ;@Ahk2Exe-IgnoreEnd
 MenuTray := A_TrayMenu
 MenuTray.Delete()
-MenuTray.Add("E&xit Program`tX", ExitScript)
+MenuTray.Add("E&xit Program`tX", (*) => ExitApp())
 MenuTray.Default := "E&xit Program`tX"
-ExitScript(*) {
-  ExitApp()
-}
+
 ; Dark Context Menu
 SetMenuAttr()
 ; ---------------------------------------------------------------------------

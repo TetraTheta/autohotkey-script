@@ -1,4 +1,4 @@
-﻿/**
+/**
  * TistoryEditorHelper v2.0.0 : Type predefined text quickly with hotstring
  */
 #Requires AutoHotkey v2
@@ -27,12 +27,12 @@ MenuTray.Delete() ; Reset default tray menu
 MenuTraySub := Menu() ; Sub tray menu
 ; Submenu
 if (!A_IsCompiled) {
-  MenuTraySub.Add("Edit Script`tE", EditScript)
+  MenuTraySub.Add("Edit Script`tE", ScriptEdit)
 }
-MenuTraySub.Add("Reload Script`tR", ReloadScript)
+MenuTraySub.Add("Reload Script`tR", (*) => Reload())
 MenuTraySub.Add() ; Create separator
 MenuTraySub.Add("List Variables`tV", ListVariables)
-MenuTraySub.Add("Suspend Script`tS", SuspendScript)
+MenuTraySub.Add("Suspend Script`tS", ScriptSuspend)
 ; Menu
 MenuTray.Add("&Hotstring List`tH", ShowHotstrings)
 MenuTray.Default := "&Hotstring List`tH"
@@ -40,7 +40,7 @@ MenuTray.Add("Edit Hotstring List`tK", EditHotstrings)
 MenuTray.Add() ; Create separator
 MenuTray.Add("Advanced Menu`tA", MenuTraySub)
 MenuTray.Add() ; Create separator
-MenuTray.Add("Exit Script`tX", ExitScript)
+MenuTray.Add("Exit Script`tX", (*) => ExitApp())
 
 ; Read INI file for settings
 EDITOR := IniGet("Setting", "Editor", "notepad.exe")
@@ -85,7 +85,10 @@ GetAlphaNumber(num) {
   ; Another failsafe
   return ""
 }
-EditScript(ItemName, ItemPos, TheMenu) {
+ListVariables(ItemName, ItemPos, TheMenu) {
+  ListVars()
+}
+ScriptEdit(ItemName, ItemPos, TheMenu) {
   ; Double check because A_ScriptFullPath will return EXE file if run at compiled script
   if (!A_IsCompiled) {
     ;@Ahk2Exe-IgnoreBegin
@@ -94,13 +97,7 @@ EditScript(ItemName, ItemPos, TheMenu) {
     ;@Ahk2Exe-IgnoreEnd
   }
 }
-ReloadScript(ItemName, ItemPos, TheMenu) {
-  Reload()
-}
-ListVariables(ItemName, ItemPos, TheMenu) {
-  ListVars()
-}
-SuspendScript(ItemName, ItemPos, TheMenu) {
+ScriptSuspend(ItemName, ItemPos, TheMenu) {
   Suspend(-1)
   if (A_IsSuspended) {
     ; Script is now suspended
@@ -146,7 +143,4 @@ ShowHotStrings(ItemName, ItemPos, TheMenu) {
 EditHotStrings(ItemName, ItemPos, TheMenu) {
   RunWait("`"" . EDITOR . "`" `"" . GetIniPath() . "`"")
   Reload()
-}
-ExitScript(ItemName, ItemPos, TheMenu) {
-  ExitApp()
 }

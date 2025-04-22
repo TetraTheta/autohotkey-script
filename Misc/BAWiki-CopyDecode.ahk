@@ -1,6 +1,5 @@
 /************************************************************************
  * @description Extract character name from URL copied from Blue Archive Wiki
- * @file CopyDecode.ahk
  * @author TetraTheta
  * @date 2022/12/01
  * @version 1.0.0

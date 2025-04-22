@@ -1,6 +1,5 @@
-﻿/************************************************************************
+/************************************************************************
  * @description Auto clicker for Minecraft
- * @file MCAutoClicker.ahk
  * @author TetraTheta
  * @date 2022/03/15
  * @version 2.2.0
@@ -57,7 +56,7 @@ MenuTraySub := Menu() ; Sub tray menu
 ;@Ahk2Exe-IgnoreBegin
 MenuTraySub.Add("Edit Script`tE", EditScript)
 ;@Ahk2Exe-IgnoreEnd
-MenuTraySub.Add("Reload Script`tR", ReloadScript)
+MenuTraySub.Add("Reload Script`tR", (*) => Reload())
 MenuTraySub.Add() ; Create separator
 MenuTraySub.Add("Suspend Script`tS", SuspendScript)
 ; Menu
@@ -65,7 +64,7 @@ MenuTray.Add("&Hotkey List`tH", ShowHotkey)
 MenuTray.Add() ; Create separator
 MenuTray.Add("Advanced Menu`tA", MenuTraySub)
 MenuTray.Add() ; Create separator
-MenuTray.Add("Exit Script`tX", ExitScript)
+MenuTray.Add("Exit Script`tX", (*) => ExitApp())
 ; Set default entry
 MenuTray.Default := "Exit Script`tX" ; Default action is 'Exit'
 
@@ -80,9 +79,6 @@ EditScript(ItemName, ItemPos, TheMenu) {
     Reload()
     ;@Ahk2Exe-IgnoreEnd
   }
-}
-ReloadScript(ItemName, ItemPos, TheMenu) {
-  Reload()
 }
 SuspendScript(ItemName, ItemPos, TheMenu) {
   Suspend(-1)
@@ -114,9 +110,6 @@ SuspendScript(ItemName, ItemPos, TheMenu) {
 }
 ShowHotkey(ItemName, ItemPos, TheMenu) {
   ListHotkeys()
-}
-ExitScript(ItemName, ItemPos, TheMenu) {
-  ExitApp()
 }
 ; Code related to click multiple times
 ToggleClickRepeat() {

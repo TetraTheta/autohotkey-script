@@ -1,4 +1,4 @@
-﻿/**
+/**
  * QuickTextInput v2.0.0 : Type predefined text quickly with hotkey
  */
 #Requires AutoHotkey v2
@@ -27,12 +27,12 @@ MenuTray.Delete() ; Reset default tray menu
 MenuTraySub := Menu() ; Sub tray menu
 ; Submenu
 if (!A_IsCompiled) {
-  MenuTraySub.Add("Edit Script`tE", EditScript)
+  MenuTraySub.Add("Edit Script`tE", ScriptEdit)
 }
-MenuTraySub.Add("Reload Script`tR", ReloadScript)
+MenuTraySub.Add("Reload Script`tR", (*) => Reload())
 MenuTraySub.Add() ; Create separator
 MenuTraySub.Add("List Variables`tV", ListVariables)
-MenuTraySub.Add("Suspend Script`tS", SuspendScript)
+MenuTraySub.Add("Suspend Script`tS", ScriptSuspend)
 ; Menu
 MenuTray.Add("&Hotkey List`tH", ShowQuickText)
 MenuTray.Default := "&Hotkey List`tH"
@@ -41,7 +41,7 @@ MenuTray.Add("Open Memo File`tO", OpenMemoFile)
 MenuTray.Add() ; Create separator
 MenuTray.Add("Advanced Menu`tA", MenuTraySub)
 MenuTray.Add() ; Create separator
-MenuTray.Add("Exit Script`tX", ExitScript)
+MenuTray.Add("Exit Script`tX", (*) => ExitApp())
 
 ; Read INI file for settings
 EDITOR := IniGet("Setting", "Editor", "notepad.exe")
@@ -95,7 +95,10 @@ varA9 := IniGet("Text List", "Alt + Numpad9", "")    ; Alt + Numpad9
 !Numpad9:: Send(varA9)       ; Alt + Numpad9
 
 ; Functions
-EditScript(ItemName, ItemPos, TheMenu) {
+ListVariables(ItemName, ItemPos, TheMenu) {
+  ListVars()
+}
+ScriptEdit(ItemName, ItemPos, TheMenu) {
   ; Double check because A_ScriptFullPath will return EXE file if run at compiled script
   if (!A_IsCompiled) {
     ;@Ahk2Exe-IgnoreBegin
@@ -104,13 +107,7 @@ EditScript(ItemName, ItemPos, TheMenu) {
     ;@Ahk2Exe-IgnoreEnd
   }
 }
-ReloadScript(ItemName, ItemPos, TheMenu) {
-  Reload()
-}
-ListVariables(ItemName, ItemPos, TheMenu) {
-  ListVars()
-}
-SuspendScript(ItemName, ItemPos, TheMenu) {
+ScriptSuspend(ItemName, ItemPos, TheMenu) {
   Suspend(-1)
   if (A_IsSuspended) {
     ; Script is now suspended
@@ -179,7 +176,4 @@ EditQuickText(ItemName, ItemPos, TheMenu) {
 }
 OpenMemoFile(ItemName, ItemPos, TheMenu) {
   Run("`"" . EDITOR . "`" `"" . A_ScriptDir . "\" . MEMO . "`"")
-}
-ExitScript(ItemName, ItemPos, TheMenu) {
-  ExitApp()
 }

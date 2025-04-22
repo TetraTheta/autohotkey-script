@@ -1,6 +1,5 @@
 /************************************************************************
  * @description Helper for ShareX for taking screenshots from various games
- * @file ShareX-Helper.ahk
  * @author TetraTheta
  * @date 2024/06/01
  * @version 1.0.0
@@ -92,7 +91,7 @@ Loop(GameList.Length) {
 MenuTray.Add()
 MenuTray.Add("AutoHide Taskbar", ToggleTB)
 MenuTray.Add()
-MenuTray.Add("Exit", ExitScript)
+MenuTray.Add("Exit", (*) => ExitApp())
 MenuTray.SetIcon("Share&X`tX", ShareXExec)
 if (InitTBState == 1) {
   MenuTray.Check("AutoHide Taskbar")
@@ -103,9 +102,6 @@ MenuTray.Default := "Exit" ; Default action is 'Exit'
 ; Menu function
 OpenShareX(*) {
   Run("`"" . ShareXExec . "`"")
-}
-ExitScript(*) {
-  ExitApp()
 }
 RunGame(ItemName, ItemPos, *) {
   global TBState

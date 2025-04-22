@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AudioHotkey v1.1.0 : Control audio
 */
 
