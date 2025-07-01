@@ -2,7 +2,7 @@
  * @description Helper for ShareX for taking screenshots from various games
  * @author TetraTheta
  * @date 2024/06/01
- * @version 1.0.0
+ * @version 1.1.0
  ***********************************************************************/
 #Requires AutoHotkey v2.0
 #Include "..\Lib\darkMode.ahk"
@@ -14,7 +14,7 @@
 ;@Ahk2Exe-SetCompanyName TetraTheta
 ;@Ahk2Exe-SetCopyright Copyright 2024. TetraTheta. All rights reserved.
 ;@Ahk2Exe-SetDescription Helper for ShareX for taking screenshots from various games
-;@Ahk2Exe-SetFileVersion 1.0.0.0
+;@Ahk2Exe-SetFileVersion 1.1.0.0
 ;@Ahk2Exe-SetMainIcon icon\sharex_helper_icon_normal.ico ; Default icon
 ;@Ahk2Exe-SetProductName ShareX Helper
 ;@Ahk2Exe-UpdateManifest 1 ; Require administrative privileges
@@ -41,6 +41,8 @@ XButton2::TakeScreenshot()
 ; Variable
 ; ------------------------------------------------------------------------------
 ; Config variables
+ExplorerPath := IniGet("Explorer", "Binary Path", "explorer.exe")
+ExplorerArgument := IniGet("Explorer", "Binary Argument", "")
 GameCount := IniGet("Setting", "Max Games", 5)
 ShareXExec := IniGet("ShareX", "ShareX Executable", "")
 RunShareXOnLaunch := IniGet("ShareX", "Launch ShareX on Launch", false)
@@ -81,6 +83,8 @@ TraySetIcon("icon\sharex_helper_icon_normal.ico")
 ; Re-define tray menu
 MenuTray := A_TrayMenu
 MenuTray.Delete() ; Reset tray menu
+MenuTray.Add("&Explorer`tE", OpenExplorer)
+MenuTray.Add()
 MenuTray.Add("Share&X`tX", OpenShareX)
 MenuTray.Add()
 Loop(GameList.Length) {
@@ -92,16 +96,20 @@ MenuTray.Add()
 MenuTray.Add("AutoHide Taskbar", ToggleTB)
 MenuTray.Add()
 MenuTray.Add("Exit", (*) => ExitApp())
+MenuTray.SetIcon("&Explorer`tE", ExplorerPath)
 MenuTray.SetIcon("Share&X`tX", ShareXExec)
+MenuTray.SetIcon("Exit", "imageres.dll", 85)
 if (InitTBState == 1) {
   MenuTray.Check("AutoHide Taskbar")
 }
-MenuTray.SetIcon("Exit", "imageres.dll", 85)
 ; Set default entry
 MenuTray.Default := "Exit" ; Default action is 'Exit'
 ; Menu function
+OpenExplorer(*) {
+  Run('"' . ExplorerPath . '" ' . ExplorerArgument)
+}
 OpenShareX(*) {
-  Run("`"" . ShareXExec . "`"")
+  Run('"' . ShareXExec . '"')
 }
 RunGame(ItemName, ItemPos, *) {
   global TBState
@@ -109,14 +117,12 @@ RunGame(ItemName, ItemPos, *) {
     TBState := 0 ; Temporarily set it to 'Always on Top'
     ToggleTB("AutoHide Taskbar")
   }
-  GameIndex := ItemPos - 2
-  local runcmd := ""
-  if (InStr(GameList[GameIndex].Path, "`"") == 1) {
-    runcmd := GameList[GameIndex].Path
-  } else {
-    runcmd := "`"" . GameList[GameIndex].Path . "`""
+  GameIndex := ItemPos - 4
+  Path := GameList[GameIndex].Path
+  if (SubStr(Path, 1, 1) != '"') {
+    Path := '"' . Path . '"'
   }
-  Run(GameList[GameIndex].Path)
+  Run(Path)
 }
 ToggleTB(ItemName, *) {
   global TBState
