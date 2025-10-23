@@ -10,17 +10,13 @@ SplitPath(A_ScriptName,,,,&A_ScriptNameOnly)
  * @param DefaultValue Default value if the value does not exist
  * @returns Value of the Key in the Section, or `DefaultValue`
  */
-IniGet(Section, Key, DefaultValue)
-{
-  ; Read from INI file and if the entry does not exists, create new one with default value
-  global A_ScriptNameOnly
-  ;iniPath := A_ScriptDir . "\" . SCRIPT . ".ini"
+IniGet(Section, Key, DefaultValue) {
   iniPath := GetIniPath()
   try {
     ; Get value of the key
     ; Will throw Error instead of OSError if key doesn't exist
     tempVar := IniRead(iniPath, Section, Key)
-  } catch Error as e {
+  } catch {
     ; Value doesn't exist
     IniWrite(DefaultValue, iniPath, Section, Key)
     tempVar := DefaultValue
@@ -29,9 +25,34 @@ IniGet(Section, Key, DefaultValue)
 }
 
 /**
- * Returns INI file path which has same name of the AHK script, and is at same directory of the AHK script
+ * Returns absolute path of INI file.
  * @returns Absolute path of INI file
  */
-GetIniPath() {
-  return A_ScriptDir . "\" . A_ScriptNameOnly . ".ini"
+GetIniPath(fileName := A_ScriptNameOnly) {
+  return A_ScriptDir . "\" fileName ".ini"
+}
+
+class IniKey {
+  iniPath := ""
+  section := ""
+  key := ""
+  defaultValue := ""
+
+  __New(iniPath := GetIniPath(), section := "", key := "", default := "") {
+    this.iniPath := iniPath
+    this.section := section
+    this.key := key
+    this.defaultValue := default
+  }
+
+  Value {
+    get {
+      try {
+        return IniRead(this.iniPath, this.section, this.key)
+      } catch {
+        return this.defaultValue
+      }
+    }
+    set => IniWrite(value, this.iniPath, this.section, this.key)
+  }
 }

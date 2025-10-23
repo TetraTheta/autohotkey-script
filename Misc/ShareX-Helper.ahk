@@ -7,7 +7,6 @@
 #Requires AutoHotkey v2.0
 #Include "..\Lib\darkMode.ahk"
 #Include "..\Lib\ini.ahk"
-#Include "..\Lib\KV.ahk"
 #SingleInstance Force
 
 ; Information about executable

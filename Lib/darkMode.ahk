@@ -109,7 +109,7 @@ SetWinTheme(GuiObj) {
   }
 }
 WindowProc(hwnd, uMsg, wParam, lParam) {
-  critical
+  Critical()
   static WM_CTLCOLOREDIT := 0x0133
   static WM_CTLCOLORLISTBOX := 0x0134
   static WM_CTLCOLORBTN := 0x0135
