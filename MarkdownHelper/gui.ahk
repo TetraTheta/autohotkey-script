@@ -79,7 +79,7 @@ class GalleryGUI extends Gui {
 
   OnOK() {
     if this.Edit.Value = "" {
-      ShakeGUI(this.Hwnd)
+      ShakeGUI(this)
     } else {
       SetTimer(this._OnTickFunc, 0)
       this.OkPressed := true
@@ -223,7 +223,7 @@ class ImageGUI extends Gui {
 
   OnOK() {
     if this.Edit.Value = "" {
-      ShakeGUI(this.Hwnd)
+      ShakeGUI(this)
     } else {
       SetTimer(this._OnTickFunc, 0)
       this.OkPressed := true
@@ -380,7 +380,7 @@ class NewGUI extends Gui {
   OnOK() {
     global C
     if this.NewTitle.Value = "" {
-      ShakeGUI(this.Hwnd)
+      ShakeGUI(this)
     } else {
       SetTimer(this._OnTickFunc, 0)
       this.OkPressed := true
