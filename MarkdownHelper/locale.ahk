@@ -20,9 +20,11 @@ MarkdownHelperIntlData := Map(
   "GAL_Message", { en: "Enter the name of the first image.`nNumber of images: ", ko: "첫 번째 이미지의 이름을 입력하세요.`n이미지 개수: " },
   "GAL_LabelEdit", { en: "Image file name", ko: "이미지 파일 이름" },
 
-  "GUI_OK", { en: "OK", ko: "확인" },
-  "GUI_Cancel", { en: "Cancel", ko: "취소" },
-  "GUI_Help", { en: "Help", ko: "도움말" },
+  "BTN_OK", { en: "OK", ko: "확인" },
+  "BTN_Cancel", { en: "Cancel", ko: "취소" },
+  "BTN_Help", { en: "Help", ko: "도움말" },
+  "BTN_Tidy", { en: "Tidy Text", ko: "텍스트 정돈" },
+  "BTN_TidyCopy", { en: "Tidy Text && Copy Text", ko: "텍스트 정돈 및 복사" },
 
   "IMG_Title", { en: "Insert Markdown Image", ko: "마크다운 이미지 삽입" },
   "IMG_Help", { en: "* If the extension is omitted, it will be '.webp'.`n* If the number is less than 3 digits, zeros are added before the file name.", ko: "* 확장자를 생략할 시, '.webp'로 간주합니다.`n* 세 자리 수 미만의 수는 세 자리가 되도록 앞에 0이 붙습니다." },
@@ -36,4 +38,7 @@ MarkdownHelperIntlData := Map(
   "NEW_Message", { en: "Enter a category and name for the new content.", ko: "새 콘텐츠의 카테고리와 제목을 입력하세요." },
   "NEW_Category", { en: "Category", ko: "카테고리" },
   "NEW_NewTitle", { en: "Content Title", ko: "콘텐츠 타이틀" },
+
+  "TIDY_Title", { en: "Tidy Text", ko: "텍스트 정돈" },
+  "TIDY_Length", { en: "Length: ", ko: "텍스트 길이: " },
 )

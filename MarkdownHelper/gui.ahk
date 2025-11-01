@@ -48,9 +48,9 @@ class GalleryGUI extends Gui {
     this.AddText("x12 y73 w410 h22", L.GAL_LabelEdit) ; Label Edit
     this.Edit := this.AddEdit("x12 y98 w364 h25 -Multi") ; Edit
     this.GalNum := this.AddDDL("x382 y98 w40 h25 vGalNum Choose" imageNum " R3", ["1", "2", "3"]) ; Gallery Number
-    this.AddButton("x266 y141 w75 h33 +Default", L.GUI_OK).OnEvent("Click", (*) => this.OnOK()) ; OK
-    this.AddButton("x347 y141 w75 h33", L.GUI_Cancel).OnEvent("Click", (*) => this.OnCancel()) ; Cancel
-    this.AddButton("x12 y141 w75 h33", L.GUI_Help).OnEvent("Click", (*) => this.OnHelp()) ; Help
+    this.AddButton("x266 y141 w75 h33 +Default", L.BTN_OK).OnEvent("Click", (*) => this.OnOK()) ; OK
+    this.AddButton("x347 y141 w75 h33", L.BTN_Cancel).OnEvent("Click", (*) => this.OnCancel()) ; Cancel
+    this.AddButton("x12 y141 w75 h33", L.BTN_Help).OnEvent("Click", (*) => this.OnHelp()) ; Help
 
     ; Enable AutoComplete on Edit to use Ctrl+Backspace
     EnableAutoCompleteOnEdit(this.Edit.Hwnd)
@@ -95,7 +95,7 @@ class GalleryGUI extends Gui {
   }
 
   OnHelp() {
-    MsgBox(L.GAL_Help, L.GUI_Help, 4096)
+    MsgBox(L.GAL_Help, L.BTN_Help, 4096)
   }
 
   OnTick() {
@@ -192,9 +192,9 @@ class ImageGUI extends Gui {
       this.ImgNum := this.AddEdit("x342 y98 w80 h25") ; Image Number
       this.AddUpDown("Range1-65535")
     }
-    this.AddButton("x266 y141 w75 h33 +Default", L.GUI_OK).OnEvent("Click", (*) => this.OnOK()) ; OK
-    this.AddButton("x347 y141 w75 h33", L.GUI_Cancel).OnEvent("Click", (*) => this.OnCancel()) ; Cancel
-    this.AddButton("x12 y141 w75 h33", L.GUI_Help).OnEvent("Click", (*) => this.OnHelp()) ; Help
+    this.AddButton("x266 y141 w75 h33 +Default", L.BTN_OK).OnEvent("Click", (*) => this.OnOK()) ; OK
+    this.AddButton("x347 y141 w75 h33", L.BTN_Cancel).OnEvent("Click", (*) => this.OnCancel()) ; Cancel
+    this.AddButton("x12 y141 w75 h33", L.BTN_Help).OnEvent("Click", (*) => this.OnHelp()) ; Help
 
     ; Enable AutoComplete on Edit to use Ctrl+Backspace
     EnableAutoCompleteOnEdit(this.Edit.Hwnd)
@@ -239,7 +239,7 @@ class ImageGUI extends Gui {
   }
 
   OnHelp() {
-    MsgBox(L.IMG_Help, L.GUI_Help, 4096)
+    MsgBox(L.IMG_Help, L.BTN_Help, 4096)
   }
 
   OnTick() {
@@ -336,9 +336,9 @@ class NewGUI extends Gui {
     this.Category := this.AddDDL("x12 y98 w410 h25 R10", NK) ; DDL Category
     this.AddText("x12 y126 w410 h22", L.NEW_NewTitle) ; Label Title
     this.NewTitle := this.AddComboBox("x12 y151 w410 h25 R5", [C.RecentTitle1.Value, C.RecentTitle2.Value, C.RecentTitle3.Value, C.RecentTitle4.Value, C.RecentTitle5.Value]) ; ComboBox Title
-    this.AddButton("x266 y191 w75 h33 +Default", L.GUI_OK).OnEvent("Click", (*) => this.OnOK()) ; OK
-    this.AddButton("x347 y191 w75 h33", L.GUI_Cancel).OnEvent("Click", (*) => this.OnCancel()) ; Cancel
-    this.AddButton("x12 y191 w75 h33", L.GUI_Help).OnEvent("Click", (*) => this.OnHelp()) ; Help
+    this.AddButton("x266 y191 w75 h33 +Default", L.BTN_OK).OnEvent("Click", (*) => this.OnOK()) ; OK
+    this.AddButton("x347 y191 w75 h33", L.BTN_Cancel).OnEvent("Click", (*) => this.OnCancel()) ; Cancel
+    this.AddButton("x12 y191 w75 h33", L.BTN_Help).OnEvent("Click", (*) => this.OnHelp()) ; Help
 
     ; Choose last selected Category
     this.Category.Choose(C.RecentCategory.Value)
@@ -408,7 +408,7 @@ class NewGUI extends Gui {
   }
 
   OnHelp() {
-    MsgBox(L.GAL_Help, L.GUI_Help, 4096)
+    MsgBox(L.GAL_Help, L.BTN_Help, 4096)
   }
 
   OnTick() {
@@ -441,5 +441,101 @@ class NewGUI extends Gui {
 
   UpdateTimerText() {
     this.Timer.Text := Format("{:02}", this.TimeLeft)
+  }
+}
+
+class TidyGUI extends Gui {
+  static InstanceHwnd := 0 ; Track if there is already an existing Window
+
+  __New() {
+    if TidyGUI.InstanceHwnd {
+      try WinActivate("ahk_id " TidyGUI.InstanceHwnd)
+      return TidyGUI.InstanceHwnd
+    }
+
+    ; Set GUI icon (hack)
+    /*@Ahk2Exe-Keep
+    TraySetIcon("HICON:" GetEmbeddedIcon(210, 32))
+    */
+    ;@Ahk2Exe-IgnoreBegin
+    TraySetIcon("icon\document.ico")
+    ;@Ahk2Exe-IgnoreEnd
+    super.__New(, L.TIDY_Title)
+    /*@Ahk2Exe-Keep
+    TraySetIcon("*")
+    */
+    ;@Ahk2Exe-IgnoreBegin
+    TraySetIcon("icon\main.ico")
+    ;@Ahk2Exe-IgnoreEnd
+
+    ; Save HWND
+    TidyGUI.InstanceHwnd := this.Hwnd
+
+    ; GUI option
+    this.Opt("+AlwaysOnTop -MaximizeBox -MinimizeBox -Resize +OwnDialogs")
+    this.OnEvent("Escape", this.Destroy)
+    this.OnEvent("Close", this.Destroy)
+    this.SetFont("s10", "Segoe UI")
+
+    ; GUI element (order matters for tabstop)
+    sel := GetSelection()
+    this.Edit := this.AddEdit("x12 y12 w560 h474 +Multi +Wrap", sel)
+    this.TextLength := this.AddText("x12 y491 w560 h22", L.TIDY_Length . StrLen(sel))
+    this.AddButton("x12 y516 w277 h33", L.BTN_Tidy).OnEvent("Click", (*) => this.OnTidy()) ; Tidy
+    this.AddButton("x295 y516 w277 h33", L.BTN_TidyCopy).OnEvent("Click", (*) => this.OnTidyCopy()) ; Tidy & Copy
+
+    ; Enable AutoComplete on Edit to use Ctrl+Backspace
+    EnableAutoCompleteOnEdit(this.Edit.Hwnd)
+
+    ; GUI event
+    this.OnEvent("Close", (*) => this.Destroy())
+
+    SetWinAttr(this)
+    SetWinTheme(this)
+  }
+
+  Destroy() {
+    h := this.Hwnd
+    c := this.Edit.Value
+    super.Destroy()
+    if TidyGUI.InstanceHwnd = h
+      TidyGUI.InstanceHwnd := 0
+  }
+
+  OnTidy() {
+    res := this.Tidy(this.Edit.Value)
+    this.Edit.Value := res.Get("text")
+    this.TextLength.Value := L.TIDY_Length . res.Get("flatLen")
+  }
+
+  OnTidyCopy() {
+    res := this.Tidy(this.Edit.Value)
+    this.Edit.Value := res.Get("text")
+    this.TextLength.Value := L.TIDY_Length . res.Get("flatLen")
+
+    if res.Get("flatLen") <= 1000 {
+      A_Clipboard := res.Get("text")
+      this.Destroy()
+    } else
+      ShakeGUI(this)
+  }
+
+  Show() {
+    if TidyGUI.InstanceHwnd and TidyGUI.InstanceHwnd != this.Hwnd {
+      try WinActivate("ahk_id " TidyGUI.InstanceHwnd)
+      return
+    }
+
+    super.Show("w584 h561 Center")
+    this.Edit.Focus()
+  }
+
+  Tidy(oldText) {
+    newText := RegExReplace(oldText, "(\s*[\r\n]){2,}", "`n`n")
+    newText := LTrim(newText, "`n")
+    newText := RTrim(newText, "`n")
+    flatText := StrReplace(newText, "`n", "")
+    flatLen := StrLen(flatText)
+    return Map("text", newText, "flatLen", flatLen)
   }
 }

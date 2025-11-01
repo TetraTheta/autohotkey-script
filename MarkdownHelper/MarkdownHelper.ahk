@@ -179,6 +179,13 @@ SetMenuAttr()
   else
     SendInput("「」{left}")
 }
+; Ctrl + Shift + C : Open Tidy GUI
+^+C:: {
+  i := TidyGUI()
+  if i.Hwnd != TidyGUI.InstanceHwnd
+    return
+  i.Show()
+}
 ; Ctrl + D : Insert single Markdown image
 ^D:: {
   i := ImageGUI(true)
