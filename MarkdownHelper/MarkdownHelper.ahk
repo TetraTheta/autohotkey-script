@@ -41,7 +41,7 @@
 _scriptLang := GetLanguageCode()
 ; '/english' will force language to English
 for _, arg in A_Args {
-  if (StrLower(arg) = "/english") {
+  if StrLower(arg) = "/english" {
     _scriptLang := "en"
     break
   }
@@ -172,32 +172,38 @@ SetMenuAttr()
 ; Hotkey
 ; ------------------------------------------------------------------------------
 ; Ctrl + B : 「」
-^B:: SendText("「" GetSelection() "」")
+^B:: {
+  sel := GetSelection()
+  if StrLen(sel) > 0
+    SendText("「" sel "」")
+  else
+    SendInput("「」{left}")
+}
 ; Ctrl + D : Insert single Markdown image
 ^D:: {
   i := ImageGUI(true)
-  if (i.Hwnd != ImageGUI.InstanceHwnd)
+  if i.Hwnd != ImageGUI.InstanceHwnd
     return
   i.ShowAndHideAfter(C.TimeoutImage)
 }
 ; Ctrl + Shift + D : Insert multiple Markdown images in a row
 ^+D:: {
   i := ImageGUI(false)
-  if (i.Hwnd != ImageGUI.InstanceHwnd)
+  if i.Hwnd != ImageGUI.InstanceHwnd
     return
   i.ShowAndHideAfter(C.TimeoutImage)
 }
 ; Ctrl + G: Insert 'gallery/image' shortcode with length of 2
 ^G:: {
   g := GalleryGUI(2)
-  if (g.Hwnd != GalleryGUI.InstanceHwnd)
+  if g.Hwnd != GalleryGUI.InstanceHwnd
     return
   g.ShowAndHideAfter(C.TimeoutGallery)
 }
 ; Ctrl + Shift + G: Insert 'gallery/image' shortcode with length of 3
 ^+G:: {
   g := GalleryGUI(3)
-  if (g.Hwnd != GalleryGUI.InstanceHwnd)
+  if g.Hwnd != GalleryGUI.InstanceHwnd
     return
   g.ShowAndHideAfter(C.TimeoutGallery)
 }
@@ -213,7 +219,7 @@ SetMenuAttr()
 
 CreateNewContent(*) {
   g := NewGUI()
-  if (g.Hwnd != NewGUI.InstanceHwnd)
+  if g.Hwnd != NewGUI.InstanceHwnd
     return
   g.ShowAndHideAfter(C.TimeoutNew)
 }
@@ -343,8 +349,13 @@ kind=chit-chat
 GetCategoryMap(lang := _scriptLang) {
   iniPath := GetIniPath(A_ScriptNameOnly "-Category")
   try content := FileRead(iniPath)
+  catch {
+    FileAppend("", iniPath)
+    content := ""
+  }
   if content = ""
-    throw ValueError(iniPath " is not found")
+    ; iniPath is not found or empty
+    return OrderedMap()
 
   m := OrderedMap()
   displayKey := "display." lang
@@ -462,17 +473,43 @@ GetNumStringArray(inputStr, count) {
  * @returns {String} Copied String
  */
 GetSelection() {
-  prevClip := ClipboardAll()
-  A_Clipboard := ""
-  Send("^c")
-  if not ClipWait(0.25) {
-    A_Clipboard := prevClip
-    ; MsgBox("ERROR: Clipboard did not update", , "OK IconX") ; Silently ignore error
+  pid := 0
+  hFore := DllCall("GetForegroundWindow", "ptr")
+  tidFore := DllCall("GetWindowThreadProcessId", "ptr", hFore, "uint*", pid)
+  tidCur := DllCall("GetCurrentThreadId", "uint")
+
+  if tidCur != tidFore
+    DllCall("AttachThreadInput", "uint", tidCur, "uint", tidFore, "int", 1)
+
+  hFocus := DllCall("GetFocus", "ptr")
+
+  if tidCur != tidFore
+    DllCall("AttachThreadInput", "uint", tidCur, "uint", tidFore, "int", 0)
+
+  if !hFocus
     return ""
+
+  startBuf := Buffer(4)
+  endBuf := Buffer(4)
+  DllCall("SendMessageW", "ptr", hFocus, "uint", 0x00B0, "ptr", startBuf, "ptr", endBuf)
+  startPos := NumGet(startBuf, 0, "uint")
+  endPos := NumGet(endBuf, 0, "uint")
+
+  if endPos > startPos {
+    prevClip := ClipboardAll()
+    A_Clipboard := ""
+    Send("^c")
+    if not ClipWait(0.25) {
+      A_Clipboard := prevClip
+      ; MsgBox("ERROR: Clipboard did not update", , "OK IconX") ; Silently ignore error
+      return ""
+    }
+    sel := A_Clipboard
+    A_Clipboard := prevClip
+    return sel
   }
-  sel := A_Clipboard
-  A_Clipboard := prevClip
-  return sel
+
+  return ""
 }
 
 ; ------------------------------------------------------------------------------
@@ -480,7 +517,7 @@ GetSelection() {
 ; ------------------------------------------------------------------------------
 ; OnExit : Play ding sound when exit by #SingleInstance Force
 OnExitFunc(ExitReason, ExitCode) {
-  if (ExitReason == "Single" || ExitReason == "Reload")
+  if ExitReason == "Single" || ExitReason == "Reload"
     SoundPlay("*48")
 }
 OnExit(OnExitFunc)
