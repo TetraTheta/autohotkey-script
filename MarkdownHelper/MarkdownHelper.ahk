@@ -269,19 +269,20 @@ EnableAutoCompleteOnComboBox(hCombo, option := 0x20000000) {
 }
 
 /**
- * Enable Ctrl+Backspace feature on Edit control
+ * Enable Ctrl+Backspace feature on Edit control. Do not use with Multiline Edit.
  * @param hEdit HWND of Edit control
  * @param {Integer} option
  */
-EnableAutoCompleteOnEdit(hEdit, option := 0x20000000) {
+EnableAutoCompleteOnEdit(hEdit, option := -1) {
+  SHACF_FILESYS_ONLY := 0x00000010
+  SHACF_AUTOSUGGEST_FORCE_OFF := 0x20000000
+  SHACF_AUTOAPPEND_FORCE_OFF := 0x80000000
+  if option = -1
+    option := SHACF_FILESYS_ONLY | SHACF_AUTOSUGGEST_FORCE_OFF | SHACF_AUTOAPPEND_FORCE_OFF
   ; https://devblogs.microsoft.com/oldnewthing/20071011-00/?p=24823
   ; https://learn.microsoft.com/en-us/windows/win32/api/shlwapi/nf-shlwapi-shautocomplete
-  ; SHACF_AUTOSUGGEST_FORCE_OFF (0x20000000)
-  ;   Ignore the registry default and force the AutoSuggest feature off.
-  ;   This flag must be used in combination with one or more of the SHACF_FILESYS* or SHACF_URL* flags.
-  ; AKA. It won't autocomplete anything, but it will allow functionality such as Ctrl+Backspace deleting a word.
   DllCall("ole32\CoInitialize", "uint", 0)
-  DllCall("shlwapi\SHAutoComplete", "uint", hEdit, "uint", option)
+  DllCall("shlwapi\SHAutoComplete", "ptr", hEdit, "uint", option)
   DllCall("ole32\CoUninitialize")
 }
 
@@ -480,43 +481,64 @@ GetNumStringArray(inputStr, count) {
  * @returns {String} Copied String
  */
 GetSelection() {
-  pid := 0
-  hFore := DllCall("GetForegroundWindow", "ptr")
-  tidFore := DllCall("GetWindowThreadProcessId", "ptr", hFore, "uint*", pid)
-  tidCur := DllCall("GetCurrentThreadId", "uint")
-
-  if tidCur != tidFore
-    DllCall("AttachThreadInput", "uint", tidCur, "uint", tidFore, "int", 1)
-
-  hFocus := DllCall("GetFocus", "ptr")
-
-  if tidCur != tidFore
-    DllCall("AttachThreadInput", "uint", tidCur, "uint", tidFore, "int", 0)
-
-  if !hFocus
-    return ""
-
-  startBuf := Buffer(4)
-  endBuf := Buffer(4)
-  DllCall("SendMessageW", "ptr", hFocus, "uint", 0x00B0, "ptr", startBuf, "ptr", endBuf)
-  startPos := NumGet(startBuf, 0, "uint")
-  endPos := NumGet(endBuf, 0, "uint")
-
-  if endPos > startPos {
-    prevClip := ClipboardAll()
-    A_Clipboard := ""
-    Send("^c")
-    if not ClipWait(0.25) {
-      A_Clipboard := prevClip
-      ; MsgBox("ERROR: Clipboard did not update", , "OK IconX") ; Silently ignore error
-      return ""
+  ; 1) Standard Edit/RichEdit controls via EM_GETSEL
+  focused := ControlGetFocus("A")
+  hwnd := 0
+  if focused {
+    try {
+      if RegExMatch(focused, "^\d+$")
+        hwnd := focused
+      else
+        hwnd := ControlGetHwnd(focused, "A")
+    } catch {
+      hwnd := 0
     }
+  }
+  if hwnd {
+    EM_GETSEL := 0x00B0
+    try {
+      ret := SendMessage(EM_GETSEL, 0, 0, "", "ahk_id " hwnd)
+      start := ret & 0xFFFF
+      finish := (ret >> 16) & 0xFFFF
+      if finish < start
+        tmp := start, start := finish, finish := tmp
+      if finish > start {
+        full := ControlGetText("", "ahk_id " hwnd)
+        return SubStr(full, start + 1, finish - start)
+      }
+    }
+  }
+  ; 2) UI Automation TextPattern for Modern apps and Web browsers
+  try {
+    uia := ComObject("UIAutomationClient.CUIAutomation")
+    el := uia.GetFocusedElement()
+    if el {
+      try textPattern := el.GetCurrentPatternAs("TextPattern")
+      catch {
+        textPattern := el.GetCurrentPattern(10014) ; UIA_TextPatternId
+      }
+      if textPattern {
+        ranges := textPattern.GetSelection()
+        if IsObject(ranges) and ranges.Length > 0 {
+          range := ranges.GetElement(0) ? ranges.GetElement(0) : ranges[0]
+          sel := range.GetText(-1)
+          if sel != ""
+            return sel
+        }
+      }
+    }
+  }
+  ; 3) Clipboard fallback
+  prevClip := ClipboardAll()
+  A_Clipboard := ""
+  Sleep(10)
+  Send("^c")
+  if ClipWait(0.35) {
     sel := A_Clipboard
     A_Clipboard := prevClip
+    Sleep(10)
     return sel
   }
-
-  return ""
 }
 
 ; ------------------------------------------------------------------------------

@@ -485,7 +485,7 @@ class TidyGUI extends Gui {
     this.AddButton("x295 y516 w277 h33", L.BTN_TidyCopy).OnEvent("Click", (*) => this.OnTidyCopy()) ; Tidy & Copy
 
     ; Enable AutoComplete on Edit to use Ctrl+Backspace
-    EnableAutoCompleteOnEdit(this.Edit.Hwnd)
+    ;EnableAutoCompleteOnEdit(this.Edit.Hwnd) ; AutoComplete doesn't work with Multiline
 
     ; GUI event
     this.OnEvent("Close", (*) => this.Destroy())
