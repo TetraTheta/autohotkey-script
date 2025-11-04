@@ -1,3 +1,204 @@
+; ##################
+; #    FUNCTION    #
+; ##################
+/**
+ * Enable Ctrl+Backspace feature on ComboBox control
+ * @param hEdit HWND of ComboBox control
+ * @param {Integer} option
+ */
+EnableAutoCompleteOnComboBox(hCombo, option := 0x20000000) {
+  CBEM_GETEDITCONTROL := 0x0407 ; WM_USER + 7
+  hEdit := DllCall("SendMessageW", "ptr", hCombo, "uint", CBEM_GETEDITCONTROL, "ptr", 0, "ptr", 0, "ptr")
+  if !hEdit
+    hEdit := DllCall("FindWindowExW", "ptr", hCombo, "ptr", 0, "wstr", "Edit", "wstr", "", "ptr")
+
+  if !hEdit
+    return
+
+  EnableAutoCompleteOnEdit(hEdit, option)
+}
+
+/**
+ * Enable Ctrl+Backspace feature on Edit control. Do not use with Multiline Edit.
+ * @param hEdit HWND of Edit control
+ * @param {Integer} option
+ */
+EnableAutoCompleteOnEdit(hEdit, option := -1) {
+  SHACF_FILESYS_ONLY := 0x00000010
+  SHACF_AUTOSUGGEST_FORCE_OFF := 0x20000000
+  SHACF_AUTOAPPEND_FORCE_OFF := 0x80000000
+  if option = -1
+    option := SHACF_FILESYS_ONLY | SHACF_AUTOSUGGEST_FORCE_OFF | SHACF_AUTOAPPEND_FORCE_OFF
+  ; https://devblogs.microsoft.com/oldnewthing/20071011-00/?p=24823
+  ; https://learn.microsoft.com/en-us/windows/win32/api/shlwapi/nf-shlwapi-shautocomplete
+  DllCall("ole32\CoInitialize", "uint", 0)
+  DllCall("shlwapi\SHAutoComplete", "ptr", hEdit, "uint", option)
+  DllCall("ole32\CoUninitialize")
+}
+
+/**
+ * @param {String} inputStr
+ * @param {Integer} count
+ * @returns {Array}
+ */
+GetNumStringArray(inputStr, count) {
+  if count <= 0
+    return []
+
+  ; Get extension if present
+  s := String(inputStr)
+  ext := ""
+  if RegExMatch(s, "\.([A-Za-z0-9]+)$", &extM) {
+    ext := "." extM.0
+    base := SubStr(s, 1, StrLen(s) - StrLen(ext))
+  } else
+    base := s
+
+  ; Detect number at front or end of 'base'
+  if RegExMatch(base, "^\d+", &m) {
+    numPart := m.0
+    rest := SubStr(s, StrLen(numPart) + 1)
+    pos := "front"
+  } else if RegExMatch(base, "\d+$", &m) {
+    numPart := m.0
+    prefix := SubStr(base, 1, StrLen(s) - StrLen(numPart))
+    pos := "end"
+  } else {
+    arr := []
+    arr.Push(s)
+    return arr
+  }
+
+  ; Determine zero-padding rule
+  baseNum := numPart + 0
+  origLen := StrLen(numPart)
+  hasLeadingZero := (origLen > 1 and SubStr(numPart, 1, 1) = "0")
+  isPureNumber := (pos = "front" and rest = "")
+
+  width := 0
+  zeroPad := false
+  if isPureNumber {
+    if hasLeadingZero
+      width := origLen
+    else {
+      width := origLen
+      if width < 3
+        width := 3
+    }
+    zeroPad := true
+  } else if hasLeadingZero {
+    width := origLen
+    zeroPad := true
+  }
+
+  ; Build array
+  arr := []
+  loop count {
+    n := baseNum + A_Index - 1
+    sNum := n . ""
+    if zeroPad and (StrLen(sNum) < width) {
+      zeros := ""
+      toAdd := width - StrLen(sNum)
+      loop toAdd
+        zeros .= "0"
+      sNum := zeros . sNum
+    }
+    out := (pos = "front") ? sNum . rest : prefix . sNum
+    arr.Push(out)
+  }
+  return arr
+}
+
+/**
+ * Returns currently selected text
+ * @returns {String} Copied String
+ */
+GetSelection() {
+  ; 1) Standard Edit/RichEdit controls via EM_GETSEL
+  focused := ControlGetFocus("A")
+  hwnd := 0
+  if focused {
+    try {
+      if RegExMatch(focused, "^\d+$")
+        hwnd := focused
+      else
+        hwnd := ControlGetHwnd(focused, "A")
+    } catch {
+      hwnd := 0
+    }
+  }
+  if hwnd {
+    EM_GETSEL := 0x00B0
+    try {
+      ret := SendMessage(EM_GETSEL, 0, 0, "", "ahk_id " hwnd)
+      start := ret & 0xFFFF
+      finish := (ret >> 16) & 0xFFFF
+      if finish < start
+        tmp := start, start := finish, finish := tmp
+      if finish > start {
+        full := ControlGetText("", "ahk_id " hwnd)
+        return SubStr(full, start + 1, finish - start)
+      }
+    }
+  }
+  ; 2) UI Automation TextPattern for Modern apps and Web browsers
+  try {
+    uia := ComObject("UIAutomationClient.CUIAutomation")
+    el := uia.GetFocusedElement()
+    if el {
+      try textPattern := el.GetCurrentPatternAs("TextPattern")
+      catch {
+        textPattern := el.GetCurrentPattern(10014) ; UIA_TextPatternId
+      }
+      if textPattern {
+        ranges := textPattern.GetSelection()
+        if IsObject(ranges) and ranges.Length > 0 {
+          range := ranges.GetElement(0) ? ranges.GetElement(0) : ranges[0]
+          sel := range.GetText(-1)
+          if sel != ""
+            return sel
+        }
+      }
+    }
+  }
+  ; 3) Clipboard fallback
+  prevClip := ClipboardAll()
+  A_Clipboard := ""
+  Sleep(10)
+  Send("^c")
+  if ClipWait(0.35) {
+    sel := A_Clipboard
+    A_Clipboard := prevClip
+    Sleep(10)
+    return sel
+  }
+}
+
+/**
+ * Shake given GUI
+ * @param {Gui} targetGui GUI to shake
+ * @param {Integer} iShakeCount Number of shake
+ * @param {Integer} iRattleX Magnitude of shake, in X axis.
+ * @param {Integer} iRattleY Magnitude of shake, in Y axis.
+ */
+ShakeGUI(targetGui, iShakeCount := 20, iRattleX := 3, iRattleY := 3) {
+  if !(IsObject(targetGui) and targetGui is Gui)
+    return
+  oriX := 0, oriY := 0
+  targetGui.GetPos(&oriX, &oriY)
+  loop iShakeCount {
+    rx := Random(oriX - iRattleX, oriX + iRattleX)
+    ry := Random(oriY - iRattleY, oriY + iRattleY)
+    targetGui.Move(rx, ry)
+    Sleep(10)
+  }
+  targetGui.Move(oriX, oriY)
+}
+
+; ###############
+; #    CLASS    #
+; ###############
+
 class GalleryGUI extends Gui {
   static InstanceHwnd := 0 ; Track if there is already an existing Window
   _OnTickFunc := this.OnTick.Bind(this)
@@ -62,6 +263,19 @@ class GalleryGUI extends Gui {
     SetWinTheme(this)
   }
 
+  /**
+   * @param {String} inputStr
+   * @param {Integer} count
+   */
+  BuildGalleryString(inputStr, count) {
+    arr := GetNumStringArray(inputStr, count)
+    if arr.Length = 0
+      return ""
+
+    result := arr.Implode("|")
+    return "{{< gallery/image src=`"" result "`" >}}"
+  }
+
   Destroy() {
     SetTimer(this._OnTickFunc, 0)
     h := this.Hwnd
@@ -113,7 +327,7 @@ class GalleryGUI extends Gui {
   }
 
   SendText() {
-    SendText(BuildGalleryString(this.EditValue, Integer(this.GalNumValue)) "`n`n")
+    SendText(this.BuildGalleryString(this.EditValue, Integer(this.GalNumValue)) "`n`n")
   }
 
   ShowAndHideAfter(seconds) {
@@ -206,6 +420,25 @@ class ImageGUI extends Gui {
     SetWinTheme(this)
   }
 
+  /**
+   * @param {String} inputStr
+   * @param {Integer} count
+   */
+  BuildMDImageString(inputStr, count) {
+    arr := GetNumStringArray(inputStr, count)
+    if arr.Length = 0
+      return ""
+
+    for i, v in arr {
+      SplitPath(v, , , &ext)
+      if ext = ""
+        arr[i] := v ".webp"
+    }
+
+    result := arr.Implode(")`n`n![](")
+    return "![](" result ")"
+  }
+
   Destroy() {
     SetTimer(this._OnTickFunc, 0)
     h := this.Hwnd
@@ -228,7 +461,7 @@ class ImageGUI extends Gui {
       SetTimer(this._OnTickFunc, 0)
       this.OkPressed := true
       this.EditValue := this.Edit.Value
-      this.ImgNumValue := this.isSingle ? 1 :this.ImgNum.Value
+      this.ImgNumValue := this.isSingle ? 1 : this.ImgNum.Value
       this.Destroy()
     }
   }
@@ -259,7 +492,7 @@ class ImageGUI extends Gui {
   SendText() {
     ; SendText() lags, so use clipboard instead
     prevClip := ClipboardAll()
-    A_Clipboard := BuildMDImageString(this.EditValue, Integer(this.ImgNumValue)) "`n`n"
+    A_Clipboard := this.BuildMDImageString(this.EditValue, Integer(this.ImgNumValue)) "`n`n"
     Sleep(10)
     Send("^v")
     Sleep(10)
@@ -479,7 +712,8 @@ class TidyGUI extends Gui {
 
     ; GUI element (order matters for tabstop)
     sel := GetSelection()
-    this.Edit := this.AddEdit("x12 y12 w560 h474 +Multi +Wrap", sel)
+    ;this.Edit := this.AddEdit("x12 y12 w560 h474 +Multi +Wrap", sel)
+    this.Edit := MultiEdit(this.AddEdit("x12 y12 w560 h474 +Multi +Wrap", sel))
     this.TextLength := this.AddText("x12 y491 w560 h22", L.TIDY_Length . StrLen(sel))
     this.AddButton("x12 y516 w277 h33", L.BTN_Tidy).OnEvent("Click", (*) => this.OnTidy()) ; Tidy
     this.AddButton("x295 y516 w277 h33", L.BTN_TidyCopy).OnEvent("Click", (*) => this.OnTidyCopy()) ; Tidy & Copy
@@ -489,9 +723,15 @@ class TidyGUI extends Gui {
 
     ; GUI event
     this.OnEvent("Close", (*) => this.Destroy())
+    This.Edit.OnEvent("Change", (*) => this.OnEditChange())
 
     SetWinAttr(this)
     SetWinTheme(this)
+  }
+
+  CountFlatLen(text) {
+    flatText := StrReplace(text, "`n", "")
+    return StrLen(flatText)
   }
 
   Destroy() {
@@ -502,22 +742,32 @@ class TidyGUI extends Gui {
       TidyGUI.InstanceHwnd := 0
   }
 
+  OnEditChange() {
+    this.RecalcLength()
+  }
+
   OnTidy() {
-    res := this.Tidy(this.Edit.Value)
-    this.Edit.Value := res.Get("text")
-    this.TextLength.Value := L.TIDY_Length . res.Get("flatLen")
+    newText := this.Tidy(this.Edit.Value)
+    this.Edit.Value := newText
+    this.RecalcLength()
   }
 
   OnTidyCopy() {
-    res := this.Tidy(this.Edit.Value)
-    this.Edit.Value := res.Get("text")
-    this.TextLength.Value := L.TIDY_Length . res.Get("flatLen")
+    newText := this.Tidy(this.Edit.Value)
+    this.Edit.Value := newText
+    flatLen := this.RecalcLength()
 
-    if res.Get("flatLen") <= 1000 {
-      A_Clipboard := res.Get("text")
+    if flatLen <= 1000 {
+      A_Clipboard := newText
       this.Destroy()
     } else
       ShakeGUI(this)
+  }
+
+  RecalcLength() {
+    flatLen := this.CountFlatLen(this.Edit.Value)
+    this.TextLength.Value := L.TIDY_Length . flatLen
+    return flatLen
   }
 
   Show() {
@@ -534,8 +784,85 @@ class TidyGUI extends Gui {
     newText := RegExReplace(oldText, "(\s*[\r\n]){2,}", "`n`n")
     newText := LTrim(newText, "`n")
     newText := RTrim(newText, "`n")
-    flatText := StrReplace(newText, "`n", "")
-    flatLen := StrLen(flatText)
-    return Map("text", newText, "flatLen", flatLen)
+    return newText
+  }
+}
+
+class MultiEdit {
+  ctrl := ""
+  parent := ""
+  parentHwnd := ""
+  ClassNN := ""
+  hotIfFunc := ""
+  handler := ""
+
+  /**
+   * @param {Gui.Edit} editObj
+   */
+  __New(editObj) {
+    if not IsObject(editObj)
+      throw "MultiEdit.__New expects Gui.Edit control"
+    this.ctrl := editObj
+    this.parent := editObj.Gui
+    this.parentHwnd := editObj.Gui.Hwnd
+    this.ClassNN := editObj.ClassNN
+
+    this.hotIfFunc := this._HotIfCallback.Bind(this)
+    this.handler := this._OnCtrlBS.Bind(this)
+
+    HotIf(this.hotIfFunc)
+    Hotkey("^BackSpace", this.handler)
+    HotIf()
+
+    try this.ctrl.Gui.OnEvent("Close", this._OnGuiClose.Bind(this))
+  }
+
+  _HotIfcallback(*) {
+    if not this.parentHwnd or not this.classNN
+      return false
+    return WinActive("ahk_id " this.parentHwnd) and ControlGetFocus() = this.ctrl.Hwnd
+  }
+
+  _OnCtrlBS(*) {
+    while GetKeyState("Ctrl", "P") and GetKeyState("Backspace", "P") {
+      Send("{Ctrl down}{Shift down}{Left}{Shift up}{Ctrl up}{Backspace}")
+      Sleep(100)
+    }
+  }
+
+  _OnGuiclose(*) {
+    this.__Delete()
+  }
+
+  __Delete() {
+    try {
+      HotIf(this.hotIfFunc)
+      Hotkey("^Backspace", "Off")
+      HotIf()
+    }
+    try {
+      if IsObject(this.parent)
+        this.parent.OnEvent("Close", "")
+    }
+
+    this.ctrl := ""
+    this.parent := ""
+    this.parentHwnd := ""
+    this.ClassNN := ""
+    this.hotIfFunc := ""
+    this.handler := ""
+  }
+
+  OnEvent(eventName, handler) {
+    this.ctrl.OnEvent(eventName, handler)
+  }
+
+  Focus() {
+    this.ctrl.Focus()
+  }
+
+  Value {
+    get => this.ctrl.Value
+    set => this.ctrl.Value := value
   }
 }
