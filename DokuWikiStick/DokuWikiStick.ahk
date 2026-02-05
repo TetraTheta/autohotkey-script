@@ -16,7 +16,6 @@ Persistent(true)
 ;@Ahk2Exe-SetCopyright Copyright (c) 2026. TetraTheta. All rights reserved.
 ;@Ahk2Exe-SetDescription DokuWiki on a Stick Helper
 ;@Ahk2Exe-SetFileVersion 1.0.0.0
-;@Ahk2Exe-SetLanguage 0x0412
 ;@Ahk2Exe-SetMainIcon icon\main.ico ; Default icon
 ;@Ahk2Exe-SetProductName DokuWikiStick
 

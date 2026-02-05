@@ -16,7 +16,6 @@ DetectHiddenWindows(True)
 ;@Ahk2Exe-SetCopyright Copyright 2023. TetraTheta. All rights reserved.
 ;@Ahk2Exe-SetDescription Auto clicker for Minecraft
 ;@Ahk2Exe-SetFileVersion 2.2.0.0
-;@Ahk2Exe-SetLanguage 0x0412
 ;@Ahk2Exe-SetMainIcon icon\icon_normal.ico ; Default icon
 ;@Ahk2Exe-SetProductName MCAutoClicker
 

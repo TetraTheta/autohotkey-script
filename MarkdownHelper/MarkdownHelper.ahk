@@ -19,7 +19,6 @@
 ;@Ahk2Exe-SetCopyright Copyright (c) 2023. TetraTheta. All rights reserved.
 ;@Ahk2Exe-SetDescription My Hugo Blog Markdown Helper
 ;@Ahk2Exe-SetFileVersion 3.0.0.0
-;@Ahk2Exe-SetLanguage 0x0412
 ;@Ahk2Exe-SetMainIcon icon\main.ico ; Default icon
 ;@Ahk2Exe-SetProductName MarkdownHelper
 

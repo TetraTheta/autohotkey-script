@@ -16,7 +16,6 @@ SetDefaultMouseSpeed(0)
 ;@Ahk2Exe-SetCopyright Copyright (c) TetraTheta. All rights reserved.
 ;@Ahk2Exe-SetDescription Utility for ONE GameLoop
 ;@Ahk2Exe-SetFileVersion 1.0.0.0
-;@Ahk2Exe-SetLanguage 0x0412
 ;@Ahk2Exe-SetProductName ONE-GameLoop-Helper
 ;@Ahk2Exe-UpdateManifest 1 ; Require administrative privileges
 
