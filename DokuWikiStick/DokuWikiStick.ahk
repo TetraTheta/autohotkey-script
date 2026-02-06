@@ -2,7 +2,7 @@
  * @description DokuWiki on a Stick Helper
  * @author TetraTheta
  * @date 2026/02/03
- * @version 1.0.0
+ * @version 1.1.0
  ***********************************************************************/
 #Requires AutoHotkey v2.0
 #Include "..\Lib\darkMode.ahk"
@@ -15,7 +15,7 @@ Persistent(true)
 ;@Ahk2Exe-SetCompanyName TetraTheta
 ;@Ahk2Exe-SetCopyright Copyright (c) 2026. TetraTheta. All rights reserved.
 ;@Ahk2Exe-SetDescription DokuWiki on a Stick Helper
-;@Ahk2Exe-SetFileVersion 1.0.0.0
+;@Ahk2Exe-SetFileVersion 1.1.0.0
 ;@Ahk2Exe-SetMainIcon icon\main.ico ; Default icon
 ;@Ahk2Exe-SetProductName DokuWikiStick
 
@@ -26,6 +26,12 @@ BrowserDelay := Number(IniGet("Browser", "Delay", "2000"))
 BrowserOpen := Boolean(IniGet("Browser", "Open", "true"))
 BrowserPath := IniGet("Browser", "Path", "")
 BrowserPort := Number(IniGet("Browser", "Port", "8800"))
+
+; Expand Environment Variable of BrowserPath
+_browserPath := Buffer(32768)
+DllCall("ExpandEnvironmentStrings", "str", BrowserPath, "ptr", _browserPath, "uint", 32768)
+BrowserPath := StrGet(_browserPath)
+_browserPath := ""
 
 ; ------------------------------------------------------------------------------
 ; Command-line Parsing
@@ -78,8 +84,17 @@ SetMenuAttr()
 ; Function (GUI)
 ; ------------------------------------------------------------------------------
 Exit(*) {
-  ServerStop()
+  ServerStopSilent()
   ExitApp()
+}
+
+HideTrayTip() {
+  TrayTip()
+  if SubStr(A_OSVersion, 1, 3) = "10." {
+    A_IconHidden := true
+    Sleep 10
+    A_IconHidden := false
+  }
 }
 
 OpenWiki(*) {
@@ -91,19 +106,47 @@ OpenWiki(*) {
 }
 
 ServerRestart(*) {
-  TrayTip(, "Restarting MicroApache Server")
-  ServerStop()
+  ShowTrayTip(, "Restarting MicroApache Server")
+  ServerStopSilent()
   Sleep(1000)
-  ServerStart()
+  ServerStartSilent()
 }
 
 ServerStart(*) {
+  ShowTrayTip(, "Starting MicroApache Server")
+  ServerStartSilent()
+}
+
+ServerStartSilent(*) {
   Run(A_ScriptDir "\server\mapache.exe", A_ScriptDir "\server", "Hide")
 }
 
 ServerStop(*) {
+  ShowTrayTip(, "Stopping MicroApache Server")
+  ServerStartSilent()
+}
+
+ServerStopSilent(*) {
   ; AutoHotkey cannot kill process tree
   Run("taskkill.exe /IM mapache.exe /F /T", , "Hide")
+  FileDelete("server\logs\httpd.pid")
+}
+
+ShowHelp() {
+  help := (
+    "DokuWikiStick.exe [options]`n`n"
+    "[options]:`n"
+    "/delay:n = Pause n seconds (0 to 10) between MicroApache start and Web Browser start`n"
+    "/nb = Don't launch Web Browser`n`n"
+    "Default: Web Browser opens after 2 seconds after MicroApache server starts"
+  )
+  MsgBox(help, "Help", 64)
+  ExitApp()
+}
+
+ShowTrayTip(message := "", title := "", duration := 3000) {
+  TrayTip(message, title)
+  SetTimer(() => HideTrayTip(), -duration)
 }
 
 Startup(*) {
@@ -132,19 +175,6 @@ Boolean(value) {
     default:
       return false
   }
-}
-
-; Script function
-ShowHelp() {
-  help := (
-    "DokuWikiStick.exe [options]`n`n"
-    "[options]:`n"
-    "/delay:n = Pause n seconds (0 to 10) between MicroApache start and Web Browser start`n"
-    "/nb = Don't launch Web Browser`n`n"
-    "Default: Web Browser opens after 2 seconds after MicroApache server starts"
-  )
-  MsgBox(help, "Help", 64)
-  ExitApp()
 }
 
 ; ------------------------------------------------------------------------------
