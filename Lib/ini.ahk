@@ -1,5 +1,5 @@
 A_ScriptNameOnly := "" ; Variable for storing script file name
-SplitPath(A_ScriptName,,,,&A_ScriptNameOnly)
+SplitPath(A_ScriptName, , , , &A_ScriptNameOnly)
 
 /**
  * Reads and returns the value of the given key from INI file which has same name of the script.<br>
@@ -8,7 +8,7 @@ SplitPath(A_ScriptName,,,,&A_ScriptNameOnly)
  * @param Section Section name
  * @param Key Key name
  * @param DefaultValue Default value if the value does not exist
- * @returns Value of the Key in the Section, or `DefaultValue`
+ * @returns {String} Value of the Key in the Section, or `DefaultValue`
  */
 IniGet(Section, Key, DefaultValue) {
   iniPath := GetIniPath()
@@ -26,7 +26,7 @@ IniGet(Section, Key, DefaultValue) {
 
 /**
  * Returns absolute path of INI file.
- * @returns Absolute path of INI file
+ * @returns {String} Absolute path of INI file
  */
 GetIniPath(fileName := A_ScriptNameOnly) {
   return A_ScriptDir . "\" fileName ".ini"
