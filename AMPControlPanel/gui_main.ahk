@@ -1,10 +1,30 @@
 #Requires AutoHotkey v2.0
 
-; Embed images
-;@Ahk2Exe-AddResource *10 resource\apache.png
-;@Ahk2Exe-AddResource *10 resource\mariadb.png
-;@Ahk2Exe-AddResource *10 resource\mysql.png
-;@Ahk2Exe-AddResource *10 resource\php.png
+; Embed icons (index starts with 209)
+;@Ahk2Exe-AddResource *14 icon\apache.ico ;209
+;@Ahk2Exe-AddResource *14 icon\mariadb.ico ;210
+;@Ahk2Exe-AddResource *14 icon\mysql.ico ;211
+;@Ahk2Exe-AddResource *14 icon\php.ico ;212
+
+/**
+ * Unified function to get icon pach (for non-compiled script) or HICON handle (for compiled script)
+ * @param {String} name The filename without extension (e.g., `"apache"`)
+ * @param {Integer} resId The Resource ID assigned in Ahk2Exe (e.g., `209`). Use Resource Hacker to find out Resource ID.
+ * @param {Integer} size Desired icon size (default: `32`)
+ * @return {String} A string compatible with `Gui.AddPicture()`
+ */
+GetIcon(name, resId := 209, size := 32) {
+  if A_IsCompiled {
+    static IMAGE_ICON := 1
+    static LR_SHARED := 0x8000 ; Let system manage the lifetime (do not use DestroyIcon)
+    static LR_DEFAULTSIZE := 0x40
+
+    if hMod := DllCall("GetModuleHandleW", "ptr", 0, "ptr")
+      if hIcon := DllCall("LoadImageW", "ptr", hMod, "ptr", resId, "uint", IMAGE_ICON, "int", size, "int", size, "uint", LR_SHARED | LR_DEFAULTSIZE, "ptr")
+        return "HICON:" hIcon
+  }
+  return "icon\" name ".ico"
+}
 
 Join(sep, params*) {
   for idx, param in params
@@ -52,20 +72,20 @@ class MainGUI extends Gui {
     this.SetFont("norm")
 
     ; Apache Row
-    this.AddPicture("x" (gbStatusX + 6) " y" (gbStatusY + 64) " w32 h32", this.GetResPath("apache"))
+    this.AddPicture("x" (gbStatusX + 6) " y" (gbStatusY + 64) " w32 h32", GetIcon("apache", 209))
     this.AddText("x" (gbStatusX + 44) " y" (gbStatusY + 72) " w70 h15 Center", "Apache") ; Module
-    this.lbAPIDs := this.AddText("x" (gbStatusX + 120) " y" (gbStatusY + 72) " w100 h15 Center", "00000, 00000") ; PIDs
-    this.lbAPorts := this.AddText("x" (gbStatusX + 226) " y" (gbStatusY + 72) " w100 h15 Center", "00000, 00000") ; Ports
+    this.lbAPIDs := this.AddText("x" (gbStatusX + 120) " y" (gbStatusY + 72) " w100 h15 Center", "") ; PIDs
+    this.lbAPorts := this.AddText("x" (gbStatusX + 226) " y" (gbStatusY + 72) " w100 h15 Center", "") ; Ports
     this.btnAStart := this.AddButton("x" (gbStatusX + 335) " y" (gbStatusY + 65) " w75 h29", "Start")
     this.btnALocalWeb := this.AddButton("x" (gbStatusX + 416) " y" (gbStatusY + 65) " w75 h29", "Local Web")
     this.btnAConfig := this.AddButton("x" (gbStatusX + 497) " y" (gbStatusY + 65) " w75 h29", "Config")
     this.btnALogs := this.AddButton("x" (gbStatusX + 578) " y" (gbStatusY + 65) " w75 h29", "Logs")
 
     ; MySQL Row
-    this.AddPicture("x" (gbStatusX + 6) " y" (gbStatusY + 104) " w32 h32", this.GetResPath("mysql"))
+    this.AddPicture("x" (gbStatusX + 6) " y" (gbStatusY + 104) " w32 h32", GetIcon("mysql", 211))
     this.AddText("x" (gbStatusX + 44) " y" (gbStatusY + 112) " w70 h15 Center", "MySQL") ; Module
-    this.lbMPIDs := this.AddText("x" (gbStatusX + 120) " y" (gbStatusY + 112) " w100 h15 Center", "00000") ; PIDs
-    this.lbMPorts := this.AddText("x" (gbStatusX + 226) " y" (gbStatusY + 112) " w100 h15 Center", "00000, 00000") ; Ports
+    this.lbMPIDs := this.AddText("x" (gbStatusX + 120) " y" (gbStatusY + 112) " w100 h15 Center", "") ; PIDs
+    this.lbMPorts := this.AddText("x" (gbStatusX + 226) " y" (gbStatusY + 112) " w100 h15 Center", "") ; Ports
     this.btnMStart := this.AddButton("x" (gbStatusX + 335) " y" (gbStatusY + 105) " w75 h29", "Start")
     this.btnMConsole := this.AddButton("x" (gbStatusX + 416) " y" (gbStatusY + 105) " w75 h29", "Console")
     this.btnMConfig := this.AddButton("x" (gbStatusX + 497) " y" (gbStatusY + 105) " w75 h29", "Config")
@@ -77,11 +97,11 @@ class MainGUI extends Gui {
     this.SetFont("s9", "Segoe UI")
 
     ; --- GroupBox - Tools ---
-    _gbToolsX := 677, _gbToolsY := 13
-    this.AddGroupBox("x" _gbToolsX " y" _gbToolsY " w131 h144", "Tools")
-    this.AddButton("x" (_gbToolsX + 6) " y" (_gbToolsY + 24) " w119 h29", "webroot")
-    this.AddButton("x" (_gbToolsX + 6) " y" (_gbToolsY + 61) " w119 h29", "Shell")
-    this.AddButton("x" (_gbToolsX + 6) " y" (_gbToolsY + 98) " w119 h29", "Netstat")
+    gbToolsX := 677, gbToolsY := 13
+    this.AddGroupBox("x" gbToolsX " y" gbToolsY " w131 h144", "Tools")
+    this.AddButton("x" (gbToolsX + 6) " y" (gbToolsY + 24) " w119 h29", "webroot")
+    this.AddButton("x" (gbToolsX + 6) " y" (gbToolsY + 61) " w119 h29", "Shell")
+    this.AddButton("x" (gbToolsX + 6) " y" (gbToolsY + 98) " w119 h29", "Netstat")
 
     ; --- GroupBox - Information ---
     gbInfoX := 677, gbInfoY := 165
@@ -90,7 +110,8 @@ class MainGUI extends Gui {
     lbMySQL := this.AddText("x" (gbInfoX + 6) " y" (gbInfoY + 44) " w115 h15", "MariaDB: 00.00.00")
 
     ; --- Footer Controls ---
-    this.cbPersistent := this.AddCheckBox("x12 y453 w182 h19 Checked", "Minimize to Tray when closed")
+    ; this.cbPersistent := this.AddCheckBox("x12 y453 w182 h19 Checked", "Minimize to Tray when closed")
+    this.cbPersistent := this.AddCheckBox("x12 y453 w182 h19", "Minimize to Tray when closed")
     this.AddText("x708 y454 w100 h15 Right", "AMP v1.0.0")
 
     ; --- Initiate Menus ---
@@ -101,8 +122,9 @@ class MainGUI extends Gui {
     this.btnMConfig.OnEvent("Click", (*) => this.ShowMenu(this.menuMConfig, this.btnMConfig))
     this.btnMLogs.OnEvent("Click", (*) => this.ShowMenu(this.menuMLLogs, this.btnMLogs))
     this.tbLog.OnEvent("ContextMenu", (ctrl, *) => this.menuLog.Show())
+
     ; --- Persistent ---
-    Persistent(true)
+    Persistent(this.cbPersistent.Value)
     this.cbPersistent.OnEvent("Click", (ctrl, *) => Persistent(ctrl.Value))
     this.OnEvent("Close", this.HandleClose)
   }
@@ -147,11 +169,7 @@ class MainGUI extends Gui {
     this.menuLog.Add("Clear Log", (*) => this.tbLog.Value := "")
   }
 
-  AddLog(category, text) {
-    this.tbLog.Value .= "`n" FormatTime(, "HH:mm:ss") " [" category "] " text
-  }
-
-  GetResPath(name) => A_IsCompiled ? "HRES:*10:" name : "resource/" name ".png"
+  AddLog(category, text) => this.tbLog.Value .= FormatTime(, "HH:mm:ss") " [" category "] " text "`n"
 
   HandleClose(*) {
     if this.cbPersistent.Value {

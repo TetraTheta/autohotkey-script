@@ -5,13 +5,14 @@
  * @version 1.0.0
  ***********************************************************************/
 #Requires AutoHotkey v2.0
+; #Include "..\Lib\darkMode.ahk" ; I won't use Dark Mode for this
 #Include "gui_main.ahk"
 #SingleInstance Force
 
 ; Information about executable
 ;@Ahk2Exe-SetCompanyName TetraTheta
 ;@Ahk2Exe-SetCopyright Copyright (c) 2026. TetraTheta. All rights reserved.
-;@Ahk2Exe-SetDescription Simple AMP Stack (Apache, MySQL, PHP) control panel
+;@Ahk2Exe-SetDescription Simple AMP Stack control panel
 ;@Ahk2Exe-SetFileVersion 1.0.0.0
 ;@Ahk2Exe-SetMainIcon icon\main.ico ; Default icon
 ;@Ahk2Exe-SetProductName AMPControlPanel
