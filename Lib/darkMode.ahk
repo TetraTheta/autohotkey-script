@@ -1,47 +1,47 @@
-/*
-SetMenuAttr()
-Set context menu to dark mode
-SetWinAttr(GuiObj)
-Set GUI object to dark mode
-SetWinTheme(GuiObj)
-Set window to dark mode
-*/
 ; Source: https://www.autohotkey.com/boards/viewtopic.php?t=115952
+/*
+SetMenuAttr(): Set context menu to dark mode
+SetWinAttr(GuiObj): Set GUI object to dark mode
+SetWinTheme(GuiObj): Set window to dark mode
+*/
 DarkColors := Map("Background", "0x202020", "Controls", "0x404040", "Font", "0xE0E0E0")
 TextBGBrush := DllCall("gdi32\CreateSolidBrush", "UInt", DarkColors["Background"], "Ptr")
+
 SetMenuAttr() {
   global DarkColors
-  if (VerCompare(A_OSVersion, "10.0.17763") >= 0) {
+  if VerCompare(A_OSVersion, "10.0.17763") >= 0 {
     DWMWA_USE_IMMERSIVE_DARK_MODE := 19
-    if (VerCompare(A_OSVersion, "10.0.18985") >= 0) {
+    if VerCompare(A_OSVersion, "10.0.18985") >= 0 {
       DWMWA_USE_IMMERSIVE_DARK_MODE := 20
     }
     uxtheme := DllCall("kernel32\GetModuleHandle", "Str", "uxtheme", "Ptr")
     SetPreferredAppMode := DllCall("kernel32\GetProcAddress", "Ptr", uxtheme, "Ptr", 135, "Ptr")
     FlushMenuThemes := DllCall("kernel32\GetProcAddress", "Ptr", uxtheme, "Ptr", 136, "Ptr")
 
-    DllCall("dwmapi\DwmSetWindowAttribute", "Ptr", A_ScriptHwnd, "Int", DWMWA_USE_IMMERSIVE_DARK_MODE, "Int*", True, "Int", 4)
+    DllCall("dwmapi\DwmSetWindowAttribute", "Ptr", A_ScriptHwnd, "Int", DWMWA_USE_IMMERSIVE_DARK_MODE, "Int*", true, "Int", 4)
     DllCall(SetPreferredAppMode, "Int", 2) ; 0=Default, 1=AllowDark, 2=ForceDark, 3=ForceLight, 4=Max
     DllCall(FlushMenuThemes)
   }
 }
+
 SetWinAttr(GuiObj) {
   global DarkColors
-  if (VerCompare(A_OSVersion, "10.0.17763") >= 0) {
+  if VerCompare(A_OSVersion, "10.0.17763") >= 0 {
     DWMWA_USE_IMMERSIVE_DARK_MODE := 19
-    if (VerCompare(A_OSVersion, "10.0.18985") >= 0) {
+    if VerCompare(A_OSVersion, "10.0.18985") >= 0 {
       DWMWA_USE_IMMERSIVE_DARK_MODE := 20
     }
     uxtheme := DllCall("kernel32\GetModuleHandle", "Str", "uxtheme", "Ptr")
     SetPreferredAppMode := DllCall("kernel32\GetProcAddress", "Ptr", uxtheme, "Ptr", 135, "Ptr")
     FlushMenuThemes := DllCall("kernel32\GetProcAddress", "Ptr", uxtheme, "Ptr", 136, "Ptr")
 
-    DllCall("dwmapi\DwmSetWindowAttribute", "Ptr", GuiObj.Hwnd, "Int", DWMWA_USE_IMMERSIVE_DARK_MODE, "Int*", True, "Int", 4)
+    DllCall("dwmapi\DwmSetWindowAttribute", "Ptr", GuiObj.Hwnd, "Int", DWMWA_USE_IMMERSIVE_DARK_MODE, "Int*", true, "Int", 4)
     DllCall(SetPreferredAppMode, "Int", 2) ; 0=Default, 1=AllowDark, 2=ForceDark, 3=ForceLight, 4=Max
     DllCall(FlushMenuThemes)
     GuiObj.BackColor := DarkColors["Background"]
   }
 }
+
 SetWinTheme(GuiObj) {
   static GWL_WNDPROC := -4
   static GWL_STYLE := -16
@@ -55,8 +55,8 @@ SetWinTheme(GuiObj) {
   static LVM_GETHEADER := 0x101F
   static GetWindowLong := A_PtrSize = 8 ? "GetWindowLongPtr" : "GetWindowLong"
   static SetWindowLong := A_PtrSize = 8 ? "SetWindowLongPtr" : "SetWindowLong"
-  Init := False
-  LV_Init := False
+  Init := false
+  LV_Init := false
 
   Mode_Explorer := "DarkMode_Explorer"
   Mode_CFD := "DarkMode_CFD"
@@ -86,7 +86,7 @@ SetWinTheme(GuiObj) {
           static LV_TEXTCOLOR := SendMessage(LVM_GETTEXTCOLOR, 0, 0, GuiCtrlObj.hWnd)
           static LV_TEXTBKCOLOR := SendMessage(LVM_GETTEXTBKCOLOR, 0, 0, GuiCtrlObj.hWnd)
           static LV_BKCOLOR := SendMessage(LVM_GETBKCOLOR, 0, 0, GuiCtrlObj.hWnd)
-          LV_Init := True
+          LV_Init := true
         }
         GuiCtrlObj.Opt("-Redraw")
         SendMessage(LVM_SETTEXTCOLOR, 0, DarkColors["Font"], GuiCtrlObj.hWnd)
@@ -105,9 +105,10 @@ SetWinTheme(GuiObj) {
     ; https://www.autohotkey.com/docs/v2/lib/CallbackCreate.htm#ExSubclassGUI
     global WindowProcNew := CallbackCreate(WindowProc)  ; Avoid fast-mode for subclassing.
     global WindowProcOld := DllCall("user32\" . SetWindowLong, "Ptr", GuiObj.Hwnd, "Int", GWL_WNDPROC, "Ptr", WindowProcNew, "Ptr")
-    Init := True
+    Init := true
   }
 }
+
 WindowProc(hwnd, uMsg, wParam, lParam) {
   Critical()
   static WM_CTLCOLOREDIT := 0x0133
