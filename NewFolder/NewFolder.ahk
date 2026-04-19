@@ -12,6 +12,7 @@
 ;@Ahk2Exe-SetCopyright Copyright (c) 2026. TetraTheta. All rights reserved.
 ;@Ahk2Exe-SetDescription Create New Folder in Explorer and Enter Rename Mode
 ;@Ahk2Exe-SetFileVersion 1.0.0.0
+;@Ahk2Exe-SetMainIcon icon\main.ico
 ;@Ahk2Exe-SetProductName NewFolder
 
 ; ------------------------------------------------------------------------------
