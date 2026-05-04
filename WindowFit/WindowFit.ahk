@@ -141,34 +141,41 @@ FitWindowToWorkArea(hwnd) {
   if (workW <= 1 or workH <= 1)
     return
 
+  ; 1) 네 모서리 중 하나라도 작업영역 밖이면 현재 모니터 좌상단(L,T)으로 이동
+  left := x
+  top := y
+  right := x + w - 1
+  bottom := y + h - 1
+
+  if (left < L or left >= R
+    or top < T or top >= B
+    or right < L or right >= R
+    or bottom < T or bottom >= B) {
+    try WinMove(L, T, , , winTitle)
+    catch
+      return
+    NudgeWindowToWorkTopLeftByExtendedFrame(hwnd, winTitle, L, T)
+    x := L
+    y := T
+  }
+
   newW := w
   newH := h
   resized := false
 
-  ; 1) 창 크기가 작업영역보다 크면 "미만"으로 축소
+  ; 2) 창 크기가 작업영역보다 크면 "10픽셀 작게" 축소
   if (w > workW) {
-    newW := workW - 1
+    newW := workW - 10
     resized := true
   }
   if (h > workH) {
-    newH := workH - 1
+    newH := workH - 10
     resized := true
   }
 
   if resized {
+    ; 위치 우선 규칙 유지: 현재 위치(x, y)에서 크기만 조정
     try WinMove(x, y, newW, newH, winTitle)
-    catch
-      return
-    w := newW
-    h := newH
-  }
-
-  ; 2) 우상단 좌표가 작업영역 밖이면 현재 모니터 좌상단(L,T)으로 이동
-  topRightX := x + w - 1
-  topRightY := y
-
-  if (topRightX < L or topRightX >= R or topRightY < T or topRightY >= B) {
-    try WinMove(L, T, , , winTitle)
   }
 }
 
@@ -193,6 +200,41 @@ GetWorkAreaByHwnd(hwnd, &L, &T, &R, &B) {
   T := NumGet(mi, 24, "int")
   R := NumGet(mi, 28, "int")
   B := NumGet(mi, 32, "int")
+  return true
+}
+
+NudgeWindowToWorkTopLeftByExtendedFrame(hwnd, winTitle, targetL, targetT) {
+  if !GetExtendedFrameBounds(hwnd, &extL, &extT, &extR, &extB)
+    return
+
+  dx := targetL - extL
+  dy := targetT - extT
+  if (dx = 0 and dy = 0)
+    return
+
+  try WinGetPos(&curX, &curY, , , winTitle)
+  catch
+    return
+
+  try WinMove(curX + dx, curY + dy, , , winTitle)
+}
+
+GetExtendedFrameBounds(hwnd, &L, &T, &R, &B) {
+  ; DWMWA_EXTENDED_FRAME_BOUNDS = 9
+  rect := Buffer(16, 0) ; RECT: left, top, right, bottom (int32 x 4)
+  hr := DllCall("dwmapi\DwmGetWindowAttribute"
+    , "ptr", hwnd
+    , "uint", 9
+    , "ptr", rect.Ptr
+    , "uint", 16
+    , "int")
+  if (hr != 0)
+    return false
+
+  L := NumGet(rect, 0, "int")
+  T := NumGet(rect, 4, "int")
+  R := NumGet(rect, 8, "int")
+  B := NumGet(rect, 12, "int")
   return true
 }
 
