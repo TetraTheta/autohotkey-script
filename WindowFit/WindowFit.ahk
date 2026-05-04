@@ -113,8 +113,14 @@ FitWindowToWorkArea(hwnd) {
     return
 
   ; 도구창/쉘창 일부 제외
+  ; WS_POPUP + no WS_CAPTION 조합은 컨텍스트/트레이 메뉴 등 메뉴형 팝업이 많아 제외
+  try style := WinGetStyle(winTitle)
+  catch
+    return
   try ex := WinGetExStyle(winTitle)
   catch
+    return
+  if ((style & 0x80000000) and !(style & 0x00C00000)) ; WS_POPUP && !WS_CAPTION
     return
   if (ex & 0x80) ; WS_EX_TOOLWINDOW
     return
@@ -122,7 +128,7 @@ FitWindowToWorkArea(hwnd) {
   try cls := WinGetClass(winTitle)
   catch
     return
-  if (cls = "Progman" or cls = "WorkerW" or cls = "Shell_TrayWnd")
+  if (cls = "Progman" or cls = "WorkerW" or cls = "Shell_TrayWnd" or cls = "#32768")
     return
 
   ; 창 위치/크기
