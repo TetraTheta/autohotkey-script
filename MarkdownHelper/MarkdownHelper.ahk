@@ -2,23 +2,26 @@
  * @description My Hugo Blog Markdown Helper
  * @author TetraTheta
  * @date 2023/10/22
- * @version 3.0.0
+ * @version 3.1.0
  ***********************************************************************/
 ; No need to worry about multiple '#Include' usage of same file, because AutoHotkey will include it only once.
 #Requires AutoHotkey v2.0
-#Include "i18n.ahk"
-#Include "locale.ahk"
 #Include "..\Lib\darkMode.ahk"
 #Include "..\Lib\extension.ahk"
 #Include "..\Lib\ini.ahk"
 #Include "..\Lib\orderedMap.ahk"
+#Include "app_context.ahk"
+#Include "gui.ahk"
+#Include "helpers.ahk"
+#Include "i18n.ahk"
+#Include "locale.ahk"
 #SingleInstance Force
 
 ; Information about executable
 ;@Ahk2Exe-SetCompanyName TetraTheta
 ;@Ahk2Exe-SetCopyright Copyright (c) 2023. TetraTheta. All rights reserved.
 ;@Ahk2Exe-SetDescription My Hugo Blog Markdown Helper
-;@Ahk2Exe-SetFileVersion 3.0.0.0
+;@Ahk2Exe-SetFileVersion 3.1.0.0
 ;@Ahk2Exe-SetMainIcon icon\main.ico ; Default icon
 ;@Ahk2Exe-SetProductName MarkdownHelper
 
@@ -34,91 +37,39 @@
 ;@Ahk2Exe-AddResource *14 icon\reload.ico ;217
 ;@Ahk2Exe-AddResource *14 icon\web.ico ;218
 
-; ------------------------------------------------------------------------------
-; Internationalization
-; ------------------------------------------------------------------------------
-_scriptLang := GetLanguageCode()
-; '/english' will force language to English
-for _, arg in A_Args {
-  if StrLower(arg) = "/english" {
-    _scriptLang := "en"
-    break
-  }
-}
-; No need to use 'global L' in each function
-L := I18N(MarkdownHelperIntlData, _scriptLang)
+ctx := BuildAppContext(A_Args)
+SetupMenu(ctx)
+SetMenuAttr()
+RegisterHotkeys(ctx)
 
-; ------------------------------------------------------------------------------
-; New Post Category
-; ------------------------------------------------------------------------------
-N := GetCategoryMap(_scriptLang)
-NK := []
-for k, v in N
-  NK.Push(k)
+SetupMenu(ctx) {
+  L := ctx.L
+  C := ctx.C
 
-; ------------------------------------------------------------------------------
-; Config
-; ------------------------------------------------------------------------------
-C := Map()
-C.ProjectRootDir := IniGet("General", "Project Root Directory", A_ScriptDir)
-C.KeepConsoleOpen := IniGet("General", "Keep Console Open", false)
-C.TimeoutGallery := IniGet("Timeout", "Gallery", "15")
-C.TimeoutImage := IniGet("Timeout", "Image", "15")
-C.TimeoutNew := IniGet("Timeout", "New Post", "60")
-C.ExplorerExec := IniGet("Explorer", "Executable", "explorer.exe")
-C.ExplorerArgs := IniGet("Explorer", "Arguments", "")
-C.TerminalExec := IniGet("Terminal", "Executable", A_ComSpec)
-C.TerminalArgs := IniGet("Terminal", "Arguments", "/K cd /d C:\")
-C.GitGUIExec := IniGet("Git GUI", "Executable", "C:\Program Files\Git\cmd\git-gui.exe")
-C.GitGUIArgs := IniGet("Git GUI", "Arguments", A_ScriptDir)
-C.DevExec := IniGet("Dev Server", "Executable", "hugo.exe")
-C.DevArgs := IniGet("Dev Server", "Arguments", "")
-C.WebBrowserExec := IniGet("Web Browser", "Executable", "chrome.exe")
-C.WebBrowserArgs := IniGet("Web Browser", "Arguments", "")
-C.RecentCategory := IniKey(, "Recent", "Category")
-C.RecentTitle1 := IniKey(, "Recent", "Title 1")
-C.RecentTitle2 := IniKey(, "Recent", "Title 2")
-C.RecentTitle3 := IniKey(, "Recent", "Title 3")
-C.RecentTitle4 := IniKey(, "Recent", "Title 4")
-C.RecentTitle5 := IniKey(, "Recent", "Title 5")
-; Sanitize config value
-C.KeepConsoleOpen := C.KeepConsoleOpen ? true : false
-
-; ------------------------------------------------------------------------------
-; Variable
-; ------------------------------------------------------------------------------
-InputGUIHwnd := 0
-InputTidyHwnd := 0
-
-; ------------------------------------------------------------------------------
-; Tray Icon & Menu
-; ------------------------------------------------------------------------------
-SetupMenu() {
-  A_IconTip := "MarkdownHelper" ; Tray icon tip
+  A_IconTip := "MarkdownHelper"
   ;@Ahk2Exe-IgnoreBegin
   TraySetIcon("icon\main.ico")
   ;@Ahk2Exe-IgnoreEnd
 
-  ; Submenu (Run Script)
   RunScriptMenu := Menu()
-  RunScriptMenu.Add(L.MENU_NewContent, CreateNewContent)
+  menuPMDependenciesUpdate := Format(L.MENU_PMDependenciesUpdate, C.DetectedPM)
+  RunScriptMenu.Add(L.MENU_NewContent, (*) => CreateNewContent(ctx))
   RunScriptMenu.Add()
-  RunScriptMenu.Add(L.MENU_HugoModuleUpdate, (*) => Run("powershell.exe -Command `"$Host.UI.RawUI.WindowTitle='Updating Hugo Modules...';hugo mod get -u ./...;hugo mod tidy;Write-Host '==== DONE ====' -ForegroundColor Green;[void][System.Console]::ReadKey($false)`"", C.ProjectRootDir))
-  RunScriptMenu.Add(L.MENU_BunDependenciesUpdate, (*) => Run("powershell.exe -Command `"$Host.UI.RawUI.WindowTitle='Updating Bun Dependencies...';bun outdated;bun update;bun install --lockfile-only;Write-Host '==== DONE ====' -ForegroundColor Green;[void][System.Console]::ReadKey($false)`"", C.ProjectRootDir))
+  RunScriptMenu.Add(L.MENU_HugoModuleUpdate, (*) => Run(BuildPowerShellRunArgs("$Host.UI.RawUI.WindowTitle='Updating Hugo Modules...';hugo mod get -u ./...;hugo mod tidy;Write-Host '==== DONE ====' -ForegroundColor Green;[void][System.Console]::ReadKey($false)", true), C.ProjectRootDir))
+  RunScriptMenu.Add(menuPMDependenciesUpdate, (*) => RunPMDependenciesUpdate(ctx))
   RunScriptMenu.Add()
-  RunScriptMenu.Add(L.MENU_HugoModuleTidy, (*) => Run("powershell.exe -Command `"$Host.UI.RawUI.WindowTitle='Tidying Hugo Modules...';hugo mod tidy;Write-Host '==== DONE ====' -ForegroundColor Green;[void][System.Console]::ReadKey($false)`"", C.ProjectRootDir))
+  RunScriptMenu.Add(L.MENU_HugoModuleTidy, (*) => Run(BuildPowerShellRunArgs("$Host.UI.RawUI.WindowTitle='Tidying Hugo Modules...';hugo mod tidy;Write-Host '==== DONE ====' -ForegroundColor Green;[void][System.Console]::ReadKey($false)", true), C.ProjectRootDir))
   /*@Ahk2Exe-Keep
   RunScriptMenu.SetIcon(L.MENU_NewContent, "HICON:" GetEmbeddedIcon(216, 16))
   RunScriptMenu.SetIcon(L.MENU_HugoModuleUpdate, "HICON:" GetEmbeddedIcon(211, 16))
-  RunScriptMenu.SetIcon(L.MENU_BunDependenciesUpdate, "HICON:" GetEmbeddedIcon(211, 16))
+  RunScriptMenu.SetIcon(menuPMDependenciesUpdate, "HICON:" GetEmbeddedIcon(211, 16))
   */
   ;@Ahk2Exe-IgnoreBegin
   RunScriptMenu.SetIcon(L.MENU_NewContent, "icon\new.ico")
   RunScriptMenu.SetIcon(L.MENU_HugoModuleUpdate, "icon\download.ico")
-  RunScriptMenu.SetIcon(L.MENU_BunDependenciesUpdate, "icon\download.ico")
+  RunScriptMenu.SetIcon(menuPMDependenciesUpdate, "icon\download.ico")
   ;@Ahk2Exe-IgnoreEnd
 
-  ; Submenu (Misc)
   MiscMenu := Menu()
   MiscMenu.Add(L.MENU_Reload, (*) => Reload())
   MiscMenu.Add(L.MENU_ListHotkeys, (*) => ListHotkeys())
@@ -131,15 +82,20 @@ SetupMenu() {
   MiscMenu.SetIcon(L.MENU_ListHotkeys, "icon\document.ico")
   ;@Ahk2Exe-IgnoreEnd
 
-  ; Main Menu
   MainMenu := A_TrayMenu
   MainMenu.Delete()
   MainMenu.Add(L.MENU_OpenExplorer, (*) => Run("`"" . C.ExplorerExec . "`" " . C.ExplorerArgs))
-  MainMenu.Add(L.MENU_OpenTerminal, (*) => Run("`"" . C.TerminalExec . "`" " . C.TerminalArgs))
+  MainMenu.Add(L.MENU_OpenTerminal, (*) => (
+    termCmd := BuildTerminalLaunchCommand(ctx),
+    Run(termCmd, C.ProjectRootDir)
+  ))
   MainMenu.Add(L.MENU_OpenGitGUI, (*) => Run("`"" . C.GitGUIExec . "`" " . C.GitGUIArgs, C.ProjectRootDir))
   MainMenu.Add()
-  MainMenu.Add(L.MENU_StartHugoDev, (*) => Run("`"" . C.DevExec . "`" " . C.DevArgs, C.ProjectRootDir))
-  MainMenu.Add(L.MENU_OpenTestPage, (*) => Run("`"" . C.WebBrowserExec . "`" " . C.WebBrowserArgs))
+  MainMenu.Add(L.MENU_StartHugoDev, (*) => (
+    devCmd := BuildPowerShellRunArgs(BuildPowerShellInvokeRaw(C.DevExec, C.DevArgs), C.KeepConsoleOpen),
+    Run(devCmd, C.ProjectRootDir)
+  ))
+  MainMenu.Add(L.MENU_OpenTestPage, (*) => OpenTestPage(ctx))
   MainMenu.Add()
   MainMenu.Add(L.MENU_RunScript, RunScriptMenu)
   MainMenu.Add()
@@ -164,162 +120,66 @@ SetupMenu() {
 
   MainMenu.Default := L.MENU_Exit
 }
-SetupMenu()
-SetMenuAttr()
 
-; ------------------------------------------------------------------------------
-; Hotkey
-; ------------------------------------------------------------------------------
-; Ctrl + B : 「」
-^B:: {
+RegisterHotkeys(ctx) {
+  Hotkey("^B", (*) => HandleQuoteWrap())
+  Hotkey("^+C", (*) => ShowTidyGUI(ctx))
+  Hotkey("^D", (*) => ShowImageGUI(ctx, true))
+  Hotkey("^+D", (*) => ShowImageGUI(ctx, false))
+  Hotkey("^G", (*) => ShowGalleryGUI(ctx, 2))
+  Hotkey("^+G", (*) => ShowGalleryGUI(ctx, 3))
+  Hotkey("^!N", (*) => CreateNewContent(ctx))
+  Hotkey("^Q", (*) => SendText("&nbsp;`n`n"))
+}
+
+HandleQuoteWrap() {
   sel := GetSelection()
   if StrLen(sel) > 0
     SendText("「" sel "」")
   else
     SendInput("「」{left}")
 }
-; Ctrl + Shift + C : Open Tidy GUI
-^+C:: {
-  i := TidyGUI()
+
+ShowTidyGUI(ctx) {
+  i := TidyGUI(ctx)
   if i.Hwnd != TidyGUI.InstanceHwnd
     return
   i.Show()
 }
-; Ctrl + D : Insert single Markdown image
-^D:: {
-  i := ImageGUI(true)
+
+ShowImageGUI(ctx, isSingle) {
+  i := ImageGUI(ctx, isSingle)
   if i.Hwnd != ImageGUI.InstanceHwnd
     return
-  i.ShowAndHideAfter(C.TimeoutImage)
+  i.ShowAndHideAfter(ctx.C.TimeoutImage)
 }
-; Ctrl + Shift + D : Insert multiple Markdown images in a row
-^+D:: {
-  i := ImageGUI(false)
-  if i.Hwnd != ImageGUI.InstanceHwnd
-    return
-  i.ShowAndHideAfter(C.TimeoutImage)
-}
-; Ctrl + G: Insert 'gallery/image' shortcode with length of 2
-^G:: {
-  g := GalleryGUI(2)
+
+ShowGalleryGUI(ctx, imageNum) {
+  g := GalleryGUI(ctx, imageNum)
   if g.Hwnd != GalleryGUI.InstanceHwnd
     return
-  g.ShowAndHideAfter(C.TimeoutGallery)
+  g.ShowAndHideAfter(ctx.C.TimeoutGallery)
 }
-; Ctrl + Shift + G: Insert 'gallery/image' shortcode with length of 3
-^+G:: {
-  g := GalleryGUI(3)
-  if g.Hwnd != GalleryGUI.InstanceHwnd
-    return
-  g.ShowAndHideAfter(C.TimeoutGallery)
-}
-; Ctrl + Alt + N : New Content
-^!N:: CreateNewContent()
-; Ctrl + Q : Insert NBSP
-^Q:: SendText("&nbsp;`n`n")
 
-; ------------------------------------------------------------------------------
-; Function (GUI)
-; ------------------------------------------------------------------------------
-#Include "gui.ahk"
-
-CreateNewContent(*) {
-  g := NewGUI()
+CreateNewContent(ctx, *) {
+  g := NewGUI(ctx)
   if g.Hwnd != NewGUI.InstanceHwnd
     return
-  g.ShowAndHideAfter(C.TimeoutNew)
+  g.ShowAndHideAfter(ctx.C.TimeoutNew)
 }
 
-/**
- * Get handle of embedded icon (HICON) by its group id
- * @param resNum ID number of Icon Group (use Resource Hacker)
- * @param size Desired size of the icon
- * @return {Integer} HICON (ptr) or 0 on failure
- */
-GetEmbeddedIcon(resNum := 209, size := 32) {
-  static IMAGE_ICON := 1
-  static LR_SHARED := 0x8000 ; Let system manage the lifetime (do not use DestroyIcon)
-  static LR_DEFAULTSIZE := 0x40
-  flags := LR_SHARED | LR_DEFAULTSIZE
-
-  hMod := DllCall("GetModuleHandleW", "ptr", 0, "ptr")
-  if !hMod
-    return 0
-  namePtr := resNum + 0
-  hIcon := DllCall("LoadImageW", "ptr", hMod, "ptr", namePtr, "uint", IMAGE_ICON, "int", size, "int", size, "uint", flags, "ptr")
-  return hIcon
-}
-
-; ------------------------------------------------------------------------------
-; Function (Helper)
-; ------------------------------------------------------------------------------
-
-/*
-; Example Category INI content
-[ChitChat] ; Section name is not important
-display.en=Chit Chat
-display.ko=잡담
-kind=chit-chat
-*/
-/**
- * Get category map data from <code>A_ScriptNameOnly</code>-Category.ini
- * @param {String} lang
- * @returns {OrderedMap}
- */
-GetCategoryMap(lang := _scriptLang) {
-  iniPath := GetIniPath(A_ScriptNameOnly "-Category")
-  try content := FileRead(iniPath)
-  catch {
-    FileAppend("", iniPath)
-    content := ""
+OpenTestPage(ctx) {
+  execPath := ctx.C.WebBrowserExec
+  args := ctx.C.WebBrowserArgs
+  try {
+    Run("`"" . execPath . "`" " . args)
+  } catch Error {
+    msg := "웹 브라우저를 실행할 수 없습니다.`n설정된 실행 파일 경로를 확인하세요.`n`n실행 파일: " execPath
+    MsgBox(msg, "MarkdownHelper", 48)
   }
-  if content = ""
-    ; iniPath is not found or empty
-    return OrderedMap()
-
-  m := OrderedMap()
-  displayKey := "display." lang
-
-  curDisplay := ""
-  curKind := ""
-
-  for line in StrSplit(content, "`n") {
-    line := Trim(line, "`t`r ")
-    if line = "" or SubStr(line, 1, 1) = ";" or SubStr(line, 1, 1) = "#"
-      continue
-
-    if SubStr(line, 1, 1) = "[" {
-      if (curDisplay != "" and curKind != "")
-        m[curDisplay] := curKind
-      curDisplay := ""
-      curKind := ""
-      continue
-    }
-
-    pos := InStr(line, "=")
-    if !pos
-      continue
-
-    key := Trim(SubStr(line, 1, pos - 1))
-    val := Trim(SubStr(line, pos + 1))
-
-    if (key == displayKey)
-      curDisplay := val
-    else if (key == "kind")
-      curKind := val
-  }
-
-  if curDisplay != "" and curKind != ""
-    m[curDisplay] := curKind
-
-  return m
 }
 
-; ------------------------------------------------------------------------------
-; Event
-; ------------------------------------------------------------------------------
-; OnExit : Play ding sound when exit by #SingleInstance Force
-OnExitFunc(ExitReason, ExitCode) {
+OnExitFunc(ExitReason, _) {
   if ExitReason == "Single" || ExitReason == "Reload"
     SoundPlay("*48")
 }

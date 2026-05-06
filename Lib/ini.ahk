@@ -25,6 +25,66 @@ IniGet(Section, Key, DefaultValue) {
 }
 
 /**
+ * Reads INI value and converts it to specified type.
+ * If conversion fails, writes and returns DefaultValue.
+ * Supported types: "string", "int", "float", "bool"
+ * @param typeName Target type name
+ * @param Section Section name
+ * @param Key Key name
+ * @param DefaultValue Default value if key is missing or conversion fails
+ * @returns Converted value or DefaultValue
+ */
+IniGetAs(typeName, Section, Key, DefaultValue) {
+  iniPath := GetIniPath()
+  try {
+    raw := IniRead(iniPath, Section, Key)
+  } catch {
+    IniWrite(DefaultValue, iniPath, Section, Key)
+    return DefaultValue
+  }
+
+  ok := false
+  converted := IniConvertValue(typeName, raw, &ok)
+  if ok
+    return converted
+
+  IniWrite(DefaultValue, iniPath, Section, Key)
+  return DefaultValue
+}
+
+IniConvertValue(typeName, rawValue, &ok := false) {
+  ok := true
+  typeKey := StrLower(Trim(String(typeName)))
+  s := Trim(String(rawValue))
+
+  switch typeKey {
+    case "string", "str":
+      return s
+    case "int", "integer":
+      if RegExMatch(s, "^[+-]?\d+$")
+        return Integer(s)
+      ok := false
+      return ""
+    case "float", "double", "number":
+      if RegExMatch(s, "^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$")
+        return Float(s)
+      ok := false
+      return ""
+    case "bool", "boolean":
+      low := StrLower(s)
+      if low = "1" or low = "true" or low = "yes" or low = "on"
+        return true
+      if low = "0" or low = "false" or low = "no" or low = "off"
+        return false
+      ok := false
+      return ""
+    default:
+      ok := false
+      return ""
+  }
+}
+
+/**
  * Returns absolute path of INI file.
  * @returns {String} Absolute path of INI file
  */

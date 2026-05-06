@@ -1,3 +1,8 @@
+#Include "..\Lib\darkMode.ahk"
+#Include "..\Lib\extension.ahk"
+#Include "app_context.ahk"
+#Include "helpers.ahk"
+
 ; ##################
 ; #    FUNCTION    #
 ; ##################
@@ -36,78 +41,6 @@ EnableAutoCompleteOnEdit(hEdit, option := -1) {
   DllCall("ole32\CoUninitialize")
 }
 
-/**
- * @param {String} inputStr
- * @param {Integer} count
- * @returns {Array}
- */
-GetNumStringArray(inputStr, count) {
-  if count <= 0
-    return []
-
-  ; Get extension if present
-  s := String(inputStr)
-  ext := ""
-  if RegExMatch(s, "\.([A-Za-z0-9]+)$", &extM) {
-    ext := "." extM.0
-    base := SubStr(s, 1, StrLen(s) - StrLen(ext))
-  } else
-    base := s
-
-  ; Detect number at front or end of 'base'
-  if RegExMatch(base, "^\d+", &m) {
-    numPart := m.0
-    rest := SubStr(s, StrLen(numPart) + 1)
-    pos := "front"
-  } else if RegExMatch(base, "\d+$", &m) {
-    numPart := m.0
-    prefix := SubStr(base, 1, StrLen(s) - StrLen(numPart))
-    pos := "end"
-  } else {
-    arr := []
-    arr.Push(s)
-    return arr
-  }
-
-  ; Determine zero-padding rule
-  baseNum := numPart + 0
-  origLen := StrLen(numPart)
-  hasLeadingZero := (origLen > 1 and SubStr(numPart, 1, 1) = "0")
-  isPureNumber := (pos = "front" and rest = "")
-
-  width := 0
-  zeroPad := false
-  if isPureNumber {
-    if hasLeadingZero
-      width := origLen
-    else {
-      width := origLen
-      if width < 3
-        width := 3
-    }
-    zeroPad := true
-  } else if hasLeadingZero {
-    width := origLen
-    zeroPad := true
-  }
-
-  ; Build array
-  arr := []
-  loop count {
-    n := baseNum + A_Index - 1
-    sNum := n . ""
-    if zeroPad and (StrLen(sNum) < width) {
-      zeros := ""
-      toAdd := width - StrLen(sNum)
-      loop toAdd
-        zeros .= "0"
-      sNum := zeros . sNum
-    }
-    out := (pos = "front") ? sNum . rest : prefix . sNum
-    arr.Push(out)
-  }
-  return arr
-}
 
 /**
  * Returns currently selected text
@@ -163,14 +96,16 @@ GetSelection() {
   }
   ; 3) Clipboard fallback
   prevClip := ClipboardAll()
-  A_Clipboard := ""
-  Sleep(10)
-  Send("^c")
-  if ClipWait(0.35) {
-    sel := A_Clipboard
-    A_Clipboard := prevClip
+  try {
+    A_Clipboard := ""
     Sleep(10)
-    return sel
+    Send("^c")
+    if ClipWait(0.35) {
+      sel := A_Clipboard
+      return sel
+    }
+  } finally {
+    try A_Clipboard := prevClip
   }
 }
 
@@ -184,34 +119,128 @@ GetSelection() {
 ShakeGUI(targetGui, iShakeCount := 20, iRattleX := 3, iRattleY := 3) {
   if !(IsObject(targetGui) and targetGui is Gui)
     return
+  hwnd := targetGui.Hwnd
+  if !hwnd
+    return
+
+  SWP_NOSIZE := 0x0001
+  SWP_NOZORDER := 0x0004
+  SWP_NOACTIVATE := 0x0010
+  SWP_FLAGS := SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE
+
   oriX := 0, oriY := 0
-  targetGui.GetPos(&oriX, &oriY)
+  WinGetPos(&oriX, &oriY, , , "ahk_id " hwnd)
   loop iShakeCount {
     rx := Random(oriX - iRattleX, oriX + iRattleX)
     ry := Random(oriY - iRattleY, oriY + iRattleY)
-    targetGui.Move(rx, ry)
-    Sleep(10)
+    DllCall("SetWindowPos", "ptr", hwnd, "ptr", 0, "int", rx, "int", ry, "int", 0, "int", 0, "uint", SWP_FLAGS)
+    Sleep(5)
   }
-  targetGui.Move(oriX, oriY)
+  DllCall("SetWindowPos", "ptr", hwnd, "ptr", 0, "int", oriX, "int", oriY, "int", 0, "int", 0, "uint", SWP_FLAGS)
 }
 
 ; ###############
 ; #    CLASS    #
 ; ###############
 
-class GalleryGUI extends Gui {
-  static InstanceHwnd := 0 ; Track if there is already an existing Window
+class TimedModalGui extends Gui {
   _OnTickFunc := this.OnTick.Bind(this)
-  EditValue := ""
-  GalNumValue := ""
   OkPressed := false
+  Timer := ""
   TimeLeft := 0
 
-  __New(imageNum := 3) {
-    if GalleryGUI.InstanceHwnd {
-      try WinActivate("ahk_id " GalleryGUI.InstanceHwnd)
-      return GalleryGUI.InstanceHwnd
+  __New(title) {
+    existingHwnd := this.GetInstanceHwnd()
+    if existingHwnd {
+      try WinActivate("ahk_id " existingHwnd)
+      return existingHwnd
     }
+    super.__New(, title)
+    this.SetInstanceHwnd(this.Hwnd)
+  }
+
+  Destroy() {
+    SetTimer(this._OnTickFunc, 0)
+    h := this.Hwnd
+    super.Destroy()
+    if this.GetInstanceHwnd() = h
+      this.SetInstanceHwnd(0)
+    if this.OkPressed
+      this.OnConfirm()
+  }
+
+  DestroyWithoutAction() {
+    this.OkPressed := false
+    this.Destroy()
+  }
+
+  ConfirmAndClose() {
+    SetTimer(this._OnTickFunc, 0)
+    this.OkPressed := true
+    this.Destroy()
+  }
+
+  CancelAndClose() {
+    SetTimer(this._OnTickFunc, 0)
+    this.DestroyWithoutAction()
+  }
+
+  OnTick() {
+    this.TimeLeft -= 1
+    if this.TimeLeft <= 0 {
+      this.OnTimeout()
+      return
+    }
+    this.UpdateTimerText()
+  }
+
+  OnTimeout() {
+    SetTimer(this._OnTickFunc, 0)
+    this.DestroyWithoutAction()
+  }
+
+  ShowAndHideAfter(seconds, showOpt := "") {
+    existingHwnd := this.GetInstanceHwnd()
+    if existingHwnd and existingHwnd != this.Hwnd {
+      try WinActivate("ahk_id " existingHwnd)
+      return
+    }
+
+    this.TimeLeft := seconds
+    this.UpdateTimerText()
+    super.Show(showOpt)
+    this.FocusPrimary()
+    SetTimer(this._OnTickFunc, 1000)
+  }
+
+  UpdateTimerText() {
+    if IsObject(this.Timer)
+      this.Timer.Text := Format("{:02}", this.TimeLeft)
+  }
+
+  ; virtual methods
+  OnConfirm() {
+  }
+
+  FocusPrimary() {
+  }
+
+  GetInstanceHwnd() {
+    return 0
+  }
+
+  SetInstanceHwnd(hwnd) {
+  }
+}
+
+class GalleryGUI extends TimedModalGui {
+  static InstanceHwnd := 0 ; Track if there is already an existing Window
+  ctx := ''
+  EditValue := ""
+  GalNumValue := ""
+
+  __New(ctx, imageNum := 3) {
+    this.ctx := ctx
 
     ; Set GUI icon (hack)
     /*@Ahk2Exe-Keep
@@ -220,7 +249,7 @@ class GalleryGUI extends Gui {
     ;@Ahk2Exe-IgnoreBegin
     TraySetIcon("icon\gallery.ico")
     ;@Ahk2Exe-IgnoreEnd
-    super.__New(, L.GAL_Title)
+    super.__New(this.ctx.L.GAL_Title)
     /*@Ahk2Exe-Keep
     TraySetIcon("*")
     */
@@ -229,8 +258,6 @@ class GalleryGUI extends Gui {
     ;@Ahk2Exe-IgnoreEnd
 
     ; Save HWND
-    GalleryGUI.InstanceHwnd := this.Hwnd
-
     ; GUI option
     this.Opt("+AlwaysOnTop -MaximizeBox -MinimizeBox -Resize +OwnDialogs")
     this.OnEvent("Escape", this.Destroy)
@@ -244,14 +271,14 @@ class GalleryGUI extends Gui {
     ;@Ahk2Exe-IgnoreBegin
     this.AddPicture("x12 y12 w32 h-1", "icon\gallery.ico") ; Picture
     ;@Ahk2Exe-IgnoreEnd
-    this.Timer := this.AddText("x22 y51 w25 h22", Format("{:02}", C.TimeoutGallery)) ; Timer
-    this.AddText("x50 y12 w372 h32", L.GAL_Message . imageNum) ; Message
-    this.AddText("x12 y73 w410 h22", L.GAL_LabelEdit) ; Label Edit
+    this.Timer := this.AddText("x22 y51 w25 h22", Format("{:02}", this.ctx.C.TimeoutGallery)) ; Timer
+    this.AddText("x50 y12 w372 h32", this.ctx.L.GAL_Message . imageNum) ; Message
+    this.AddText("x12 y73 w410 h22", this.ctx.L.GAL_LabelEdit) ; Label Edit
     this.Edit := this.AddEdit("x12 y98 w364 h25 -Multi") ; Edit
     this.GalNum := this.AddDDL("x382 y98 w40 h25 vGalNum Choose" imageNum " R3", ["1", "2", "3"]) ; Gallery Number
-    this.AddButton("x266 y141 w75 h33 +Default", L.BTN_OK).OnEvent("Click", (*) => this.OnOK()) ; OK
-    this.AddButton("x347 y141 w75 h33", L.BTN_Cancel).OnEvent("Click", (*) => this.OnCancel()) ; Cancel
-    this.AddButton("x12 y141 w75 h33", L.BTN_Help).OnEvent("Click", (*) => this.OnHelp()) ; Help
+    this.AddButton("x266 y141 w75 h33 +Default", this.ctx.L.BTN_OK).OnEvent("Click", (*) => this.OnOK()) ; OK
+    this.AddButton("x347 y141 w75 h33", this.ctx.L.BTN_Cancel).OnEvent("Click", (*) => this.OnCancel()) ; Cancel
+    this.AddButton("x12 y141 w75 h33", this.ctx.L.BTN_Help).OnEvent("Click", (*) => this.OnHelp()) ; Help
 
     ; Enable AutoComplete on Edit to use Ctrl+Backspace
     EnableAutoCompleteOnEdit(this.Edit.Hwnd)
@@ -276,94 +303,55 @@ class GalleryGUI extends Gui {
     return "{{< gallery/image src=`"" result "`" >}}"
   }
 
-  Destroy() {
-    SetTimer(this._OnTickFunc, 0)
-    h := this.Hwnd
-    super.Destroy()
-    if GalleryGUI.InstanceHwnd = h
-      GalleryGUI.InstanceHwnd := 0
-    if this.OkPressed
-      this.SendText()
-  }
-
-  DestroyWithoutAction() {
-    this.OkPressed := false
-    this.Destroy()
-  }
-
   OnOK() {
     if this.Edit.Value = "" {
       ShakeGUI(this)
     } else {
-      SetTimer(this._OnTickFunc, 0)
-      this.OkPressed := true
       this.EditValue := this.Edit.Value
       this.GalNumValue := this.GalNum.Text
-      this.Destroy()
+      this.ConfirmAndClose()
     }
   }
 
   OnCancel() {
-    SetTimer(this._OnTickFunc, 0)
-    this.DestroyWithoutAction()
+    this.CancelAndClose()
   }
 
   OnHelp() {
-    MsgBox(L.GAL_Help, L.BTN_Help, 4096)
+    MsgBox(this.ctx.L.GAL_Help, this.ctx.L.BTN_Help, 4096)
   }
 
-  OnTick() {
-    this.TimeLeft -= 1
-    if this.TimeLeft <= 0 {
-      this.OnTimeout()
-      return
-    }
-    this.UpdateTimerText()
-  }
-
-  OnTimeout() {
-    SetTimer(this._OnTickFunc, 0)
-    this.DestroyWithoutAction()
-  }
-
-  SendText() {
+  OnConfirm() {
     SendText(this.BuildGalleryString(this.EditValue, Integer(this.GalNumValue)) "`n`n")
   }
 
-  ShowAndHideAfter(seconds) {
-    if GalleryGUI.InstanceHwnd and GalleryGUI.InstanceHwnd != this.Hwnd {
-      try WinActivate("ahk_id " GalleryGUI.InstanceHwnd)
-      return
-    }
-
-    this.TimeLeft := seconds
-    this.UpdateTimerText()
-    this.Show("w434 h186 Center")
+  FocusPrimary() {
     this.Edit.Focus()
-
-    SetTimer(this._OnTickFunc, 1000)
   }
 
-  UpdateTimerText() {
-    this.Timer.Text := Format("{:02}", this.TimeLeft)
+  ShowAndHideAfter(seconds) {
+    super.ShowAndHideAfter(seconds, "w434 h186 Center")
+  }
+
+  GetInstanceHwnd() {
+    return GalleryGUI.InstanceHwnd
+  }
+
+  SetInstanceHwnd(hwnd) {
+    GalleryGUI.InstanceHwnd := hwnd
   }
 }
 
-class ImageGUI extends Gui {
+class ImageGUI extends TimedModalGui {
   static InstanceHwnd := 0 ; Track if there is already an existing Window
-  _OnTickFunc := this.OnTick.Bind(this)
+  ctx := ''
   isSingle := false
   EditValue := ""
   ImgNumValue := ""
-  OkPressed := false
-  TimeLeft := 0
 
-  __New(isSingle := false) {
+  __New(ctx, isSingle := false) {
+    this.ctx := ctx
     this.isSingle := isSingle
-    if ImageGUI.InstanceHwnd {
-      try WinActivate("ahk_id " ImageGUI.InstanceHwnd)
-      return ImageGUI.InstanceHwnd
-    }
 
     ; Set GUI icon (hack)
     /*@Ahk2Exe-Keep
@@ -372,7 +360,7 @@ class ImageGUI extends Gui {
     ;@Ahk2Exe-IgnoreBegin
     TraySetIcon("icon\image.ico")
     ;@Ahk2Exe-IgnoreEnd
-    super.__New(, L.IMG_Title)
+    super.__New(this.ctx.L.IMG_Title)
     /*@Ahk2Exe-Keep
     TraySetIcon("*")
     */
@@ -381,8 +369,6 @@ class ImageGUI extends Gui {
     ;@Ahk2Exe-IgnoreEnd
 
     ; Save HWND
-    ImageGUI.InstanceHwnd := this.Hwnd
-
     ; GUI option
     this.Opt("+AlwaysOnTop -MaximizeBox -MinimizeBox -Resize +OwnDialogs")
     this.OnEvent("Escape", this.Destroy)
@@ -396,19 +382,21 @@ class ImageGUI extends Gui {
     ;@Ahk2Exe-IgnoreBegin
     this.AddPicture("x12 y12 w32 h-1", "icon\image.ico") ; Picture
     ;@Ahk2Exe-IgnoreEnd
-    this.Timer := this.AddText("x22 y51 w25 h22", Format("{:02}", C.TimeoutGallery)) ; Timer
-    this.AddText("x50 y12 w372 h32", isSingle ? L.IMG_MessageSingle : L.IMG_MessageMulti) ; Message
-    this.AddText("x12 y73 w410 h22", isSingle ? L.IMG_LabelSingle : L.IMG_LabelMulti) ; Label Edit
+    this.Timer := this.AddText("x22 y51 w25 h22", Format("{:02}", this.ctx.C.TimeoutImage)) ; Timer
+    this.AddText("x50 y12 w372 h32", isSingle ? this.ctx.L.IMG_MessageSingle : this.ctx.L.IMG_MessageMulti) ; Message
+    this.AddText("x12 y73 w410 h22", isSingle ? this.ctx.L.IMG_LabelSingle : this.ctx.L.IMG_LabelMulti) ; Label Edit
     if isSingle {
       this.Edit := this.AddEdit("x12 y98 w410 h25 -Multi") ; Edit (Text)
     } else {
       this.Edit := this.AddEdit("x12 y98 w324 h25 -Multi") ; Edit (Text)
       this.ImgNum := this.AddEdit("x342 y98 w80 h25") ; Image Number
       this.AddUpDown("Range1-65535")
+      this.ImgNum.OnEvent("Change", (*) => this.SanitizeImgNumInput())
+      this.ImgNum.Value := "1"
     }
-    this.AddButton("x266 y141 w75 h33 +Default", L.BTN_OK).OnEvent("Click", (*) => this.OnOK()) ; OK
-    this.AddButton("x347 y141 w75 h33", L.BTN_Cancel).OnEvent("Click", (*) => this.OnCancel()) ; Cancel
-    this.AddButton("x12 y141 w75 h33", L.BTN_Help).OnEvent("Click", (*) => this.OnHelp()) ; Help
+    this.AddButton("x266 y141 w75 h33 +Default", this.ctx.L.BTN_OK).OnEvent("Click", (*) => this.OnOK()) ; OK
+    this.AddButton("x347 y141 w75 h33", this.ctx.L.BTN_Cancel).OnEvent("Click", (*) => this.OnCancel()) ; Cancel
+    this.AddButton("x12 y141 w75 h33", this.ctx.L.BTN_Help).OnEvent("Click", (*) => this.OnHelp()) ; Help
 
     ; Enable AutoComplete on Edit to use Ctrl+Backspace
     EnableAutoCompleteOnEdit(this.Edit.Hwnd)
@@ -439,57 +427,47 @@ class ImageGUI extends Gui {
     return "![](" result ")"
   }
 
-  Destroy() {
-    SetTimer(this._OnTickFunc, 0)
-    h := this.Hwnd
-    super.Destroy()
-    if ImageGUI.InstanceHwnd = h
-      ImageGUI.InstanceHwnd := 0
-    if this.OkPressed
-      this.SendText()
-  }
-
-  DestroyWithoutAction() {
-    this.OkPressed := false
-    this.Destroy()
-  }
-
   OnOK() {
     if this.Edit.Value = "" {
       ShakeGUI(this)
     } else {
-      SetTimer(this._OnTickFunc, 0)
-      this.OkPressed := true
+      if !this.isSingle
+        this.SanitizeImgNumInput()
       this.EditValue := this.Edit.Value
       this.ImgNumValue := this.isSingle ? 1 : this.ImgNum.Value
-      this.Destroy()
+      this.ConfirmAndClose()
     }
   }
 
   OnCancel() {
-    SetTimer(this._OnTickFunc, 0)
-    this.DestroyWithoutAction()
+    this.CancelAndClose()
+  }
+
+  SanitizeImgNumInput() {
+    if this.isSingle || !IsObject(this.ImgNum)
+      return
+    raw := this.ImgNum.Value . ""
+    digits := RegExReplace(raw, "\D")
+    if digits = ""
+      normalized := "1"
+    else {
+      digits := RegExReplace(digits, "^0+(?=\d)", "")
+      valueNum := Integer(digits)
+      if valueNum < 1
+        valueNum := 1
+      if valueNum > 65535
+        valueNum := 65535
+      normalized := valueNum . ""
+    }
+    if this.ImgNum.Value != normalized
+      this.ImgNum.Value := normalized
   }
 
   OnHelp() {
-    MsgBox(L.IMG_Help, L.BTN_Help, 4096)
+    MsgBox(this.ctx.L.IMG_Help, this.ctx.L.BTN_Help, 4096)
   }
 
-  OnTick() {
-    this.TimeLeft -= 1
-    if this.TimeLeft <= 0 {
-      this.OnTimeout()
-      return
-    }
-    this.UpdateTimerText()
-  }
-
-  OnTimeout() {
-    SetTimer(this._OnTickFunc, 0)
-    this.DestroyWithoutAction()
-  }
-
-  SendText() {
+  OnConfirm() {
     ; SendText() lags, so use clipboard instead
     prevClip := ClipboardAll()
     A_Clipboard := this.BuildMDImageString(this.EditValue, Integer(this.ImgNumValue)) "`n`n"
@@ -499,38 +477,31 @@ class ImageGUI extends Gui {
     A_Clipboard := prevClip
   }
 
-  ShowAndHideAfter(seconds) {
-    if ImageGUI.InstanceHwnd and ImageGUI.InstanceHwnd != this.Hwnd {
-      try WinActivate("ahk_id " ImageGUI.InstanceHwnd)
-      return
-    }
-
-    this.TimeLeft := seconds
-    this.UpdateTimerText()
-    this.Show("w434 h186 Center")
+  FocusPrimary() {
     this.Edit.Focus()
-
-    SetTimer(this._OnTickFunc, 1000)
   }
 
-  UpdateTimerText() {
-    this.Timer.Text := Format("{:02}", this.TimeLeft)
+  ShowAndHideAfter(seconds) {
+    super.ShowAndHideAfter(seconds, "w434 h186 Center")
+  }
+
+  GetInstanceHwnd() {
+    return ImageGUI.InstanceHwnd
+  }
+
+  SetInstanceHwnd(hwnd) {
+    ImageGUI.InstanceHwnd := hwnd
   }
 }
 
-class NewGUI extends Gui {
+class NewGUI extends TimedModalGui {
   static InstanceHwnd := 0 ; Track if there is already an existing Window
-  _OnTickFunc := this.OnTick.Bind(this)
+  ctx := ''
   CategoryValue := ""
   NewTitleValue := ""
-  OkPressed := false
-  TimeLeft := 0
 
-  __New() {
-    if NewGUI.InstanceHwnd {
-      try WinActivate("ahk_id " NewGUI.InstanceHwnd)
-      return NewGUI.InstanceHwnd
-    }
+  __New(ctx) {
+    this.ctx := ctx
 
     ; Set GUI icon (hack)
     /*@Ahk2Exe-Keep
@@ -539,7 +510,7 @@ class NewGUI extends Gui {
     ;@Ahk2Exe-IgnoreBegin
     TraySetIcon("icon\new.ico")
     ;@Ahk2Exe-IgnoreEnd
-    super.__New(, L.NEW_Title)
+    super.__New(this.ctx.L.NEW_Title)
     /*@Ahk2Exe-Keep
     TraySetIcon("*")
     */
@@ -548,8 +519,6 @@ class NewGUI extends Gui {
     ;@Ahk2Exe-IgnoreEnd
 
     ; Save HWND
-    NewGUI.InstanceHwnd := this.Hwnd
-
     ; GUI option
     this.Opt("+AlwaysOnTop -MaximizeBox -MinimizeBox -Resize +OwnDialogs")
     this.OnEvent("Escape", this.Destroy)
@@ -563,18 +532,33 @@ class NewGUI extends Gui {
     ;@Ahk2Exe-IgnoreBegin
     this.AddPicture("x12 y12 w32 h-1", "icon\new.ico") ; Picture
     ;@Ahk2Exe-IgnoreEnd
-    this.Timer := this.AddText("x22 y51 w25 h22", Format("{:02}", C.TimeoutGallery)) ; Timer
-    this.AddText("x50 y12 w372 h32", L.NEW_Message) ; Message
-    this.AddText("x12 y73 w410 h22", L.NEW_Category) ; Label Category
-    this.Category := this.AddDDL("x12 y98 w410 h25 R10", NK) ; DDL Category
-    this.AddText("x12 y126 w410 h22", L.NEW_NewTitle) ; Label Title
-    this.NewTitle := this.AddComboBox("x12 y151 w410 h25 R5", [C.RecentTitle1.Value, C.RecentTitle2.Value, C.RecentTitle3.Value, C.RecentTitle4.Value, C.RecentTitle5.Value]) ; ComboBox Title
-    this.AddButton("x266 y191 w75 h33 +Default", L.BTN_OK).OnEvent("Click", (*) => this.OnOK()) ; OK
-    this.AddButton("x347 y191 w75 h33", L.BTN_Cancel).OnEvent("Click", (*) => this.OnCancel()) ; Cancel
-    this.AddButton("x12 y191 w75 h33", L.BTN_Help).OnEvent("Click", (*) => this.OnHelp()) ; Help
+    this.Timer := this.AddText("x22 y51 w25 h22", Format("{:02}", this.ctx.C.TimeoutNew)) ; Timer
+    this.AddText("x50 y12 w372 h32", this.ctx.L.NEW_Message) ; Message
+    this.AddText("x12 y73 w410 h22", this.ctx.L.NEW_Category) ; Label Category
+    this.Category := this.AddDDL("x12 y98 w410 h25 R10", this.ctx.NK) ; DDL Category
+    this.AddText("x12 y126 w410 h22", this.ctx.L.NEW_NewTitle) ; Label Title
+    this.NewTitle := this.AddComboBox("x12 y151 w410 h25 R5", [this.ctx.C.RecentTitle1.Value, this.ctx.C.RecentTitle2.Value, this.ctx.C.RecentTitle3.Value, this.ctx.C.RecentTitle4.Value, this.ctx.C.RecentTitle5.Value]) ; ComboBox Title
+    this.AddButton("x266 y191 w75 h33 +Default", this.ctx.L.BTN_OK).OnEvent("Click", (*) => this.OnOK()) ; OK
+    this.AddButton("x347 y191 w75 h33", this.ctx.L.BTN_Cancel).OnEvent("Click", (*) => this.OnCancel()) ; Cancel
+    this.AddButton("x12 y191 w75 h33", this.ctx.L.BTN_Help).OnEvent("Click", (*) => this.OnHelp()) ; Help
 
-    ; Choose last selected Category
-    this.Category.Choose(C.RecentCategory.Value)
+    ; Choose last selected Category (supports either index or text)
+    recentCategory := this.ctx.C.RecentCategory.Value
+    if recentCategory != "" {
+      recentCategory := recentCategory . ""
+      if RegExMatch(recentCategory, "^\d+$") {
+        idx := Integer(recentCategory)
+        if idx >= 1 and idx <= this.ctx.NK.Length
+          this.Category.Choose(idx)
+      } else {
+        for idx, name in this.ctx.NK {
+          if name = recentCategory {
+            this.Category.Choose(idx)
+            break
+          }
+        }
+      }
+    }
 
     ; Enable AutoComplete on Edit to use Ctrl+Backspace
     EnableAutoCompleteOnComboBox(this.NewTitle.Hwnd)
@@ -591,100 +575,100 @@ class NewGUI extends Gui {
   }
 
   CreateNewContent() {
-    args := A_ComSpec " " (C.KeepConsoleOpen ? "/K" : "/C") " cd /d `"" C.ProjectRootDir "`" && bun run cli new -k " N[this.CategoryValue] " `"" this.NewTitleValue "`""
-    Run(args, C.ProjectRootDir)
-  }
+    cliCommand := GetCLIBaseCommand(this.ctx)
+    if this.CategoryValue = "" || !this.ctx.N.Has(this.CategoryValue) {
+      MsgBox(this.ctx.L.NEW_Category " is invalid.", this.ctx.L.NEW_Title, 4096)
+      return
+    }
 
-  Destroy() {
-    SetTimer(this._OnTickFunc, 0)
-    h := this.Hwnd
-    super.Destroy()
-    if NewGUI.InstanceHwnd = h
-      NewGUI.InstanceHwnd := 0
-    if this.OkPressed
-      this.CreateNewContent()
-  }
+    cliTokens := ParseWindowsCommandLine(cliCommand)
+    if cliTokens.Length = 0 {
+      MsgBox("CLI Command is invalid.", this.ctx.L.NEW_Title, 4096)
+      return
+    }
 
-  DestroyWithoutAction() {
-    this.OkPressed := false
-    this.Destroy()
+    kind := this.ctx.N[this.CategoryValue]
+    title := this.NewTitleValue
+    cliTokens.Push("new")
+    cliTokens.Push("-k")
+    cliTokens.Push(kind)
+    cliTokens.Push(title)
+
+    psBody := BuildSafePSCommand(cliTokens)
+    args := BuildPowerShellRunArgs(psBody, this.ctx.C.KeepConsoleOpen)
+    Run(args, this.ctx.C.ProjectRootDir)
   }
 
   OnOK() {
-    global C
-    if this.NewTitle.Value = "" {
+    titleText := Trim(this.NewTitle.Text)
+    if titleText = "" {
       ShakeGUI(this)
     } else {
-      SetTimer(this._OnTickFunc, 0)
-      this.OkPressed := true
-      this.CategoryValue := this.Category.Text
-      this.NewTitleValue := this.NewTitle.Text
+      this.CategoryValue := Trim(this.Category.Text)
+      this.NewTitleValue := titleText
 
-      ; Modify Config
-      if this.CategoryValue != C.RecentCategory.Value
-        C.RecentCategory.Value := this.CategoryValue
-      if this.NewTitleValue != C.RecentTitle1.Value {
-        C.RecentTitle5.Value := C.RecentTitle4.Value
-        C.RecentTitle4.Value := C.RecentTitle3.Value
-        C.RecentTitle3.Value := C.RecentTitle2.Value
-        C.RecentTitle2.Value := C.RecentTitle1.Value
-        C.RecentTitle1.Value := this.NewTitleValue
+      if this.CategoryValue = "" || !this.ctx.N.Has(this.CategoryValue) {
+        this.OkPressed := false
+        MsgBox(this.ctx.L.NEW_Category " is invalid.", this.ctx.L.NEW_Title, 4096)
+        ShakeGUI(this)
+        return
       }
 
-      this.Destroy()
+      ; Modify Config
+      if this.CategoryValue != this.ctx.C.RecentCategory.Value
+        this.ctx.C.RecentCategory.Value := this.CategoryValue
+      if this.NewTitleValue != this.ctx.C.RecentTitle1.Value {
+        this.ctx.C.RecentTitle5.Value := this.ctx.C.RecentTitle4.Value
+        this.ctx.C.RecentTitle4.Value := this.ctx.C.RecentTitle3.Value
+        this.ctx.C.RecentTitle3.Value := this.ctx.C.RecentTitle2.Value
+        this.ctx.C.RecentTitle2.Value := this.ctx.C.RecentTitle1.Value
+        this.ctx.C.RecentTitle1.Value := this.NewTitleValue
+      }
+
+      this.ConfirmAndClose()
     }
   }
 
   OnCancel() {
-    SetTimer(this._OnTickFunc, 0)
-    this.DestroyWithoutAction()
+    this.CancelAndClose()
   }
 
   OnHelp() {
-    MsgBox(L.GAL_Help, L.BTN_Help, 4096)
+    MsgBox(this.ctx.L.NEW_Help, this.ctx.L.BTN_Help, 4096)
   }
 
-  OnTick() {
-    this.TimeLeft -= 1
-    if this.TimeLeft <= 0 {
-      this.OnTimeout()
-      return
-    }
-    this.UpdateTimerText()
+  FocusPrimary() {
+    this.NewTitle.Focus()
   }
 
-  OnTimeout() {
-    SetTimer(this._OnTickFunc, 0)
-    this.DestroyWithoutAction()
+  OnConfirm() {
+    this.CreateNewContent()
   }
 
   ShowAndHideAfter(seconds) {
-    if NewGUI.InstanceHwnd and NewGUI.InstanceHwnd != this.Hwnd {
-      try WinActivate("ahk_id " NewGUI.InstanceHwnd)
-      return
-    }
-
-    this.TimeLeft := seconds
-    this.UpdateTimerText()
-    this.Show("w434 h236 Center")
-    this.NewTitle.Focus()
-
-    SetTimer(this._OnTickFunc, 1000)
+    super.ShowAndHideAfter(seconds, "w434 h236 Center")
   }
 
-  UpdateTimerText() {
-    this.Timer.Text := Format("{:02}", this.TimeLeft)
+  GetInstanceHwnd() {
+    return NewGUI.InstanceHwnd
+  }
+
+  SetInstanceHwnd(hwnd) {
+    NewGUI.InstanceHwnd := hwnd
   }
 }
 
 class TidyGUI extends Gui {
   static InstanceHwnd := 0 ; Track if there is already an existing Window
+  ctx := ''
 
-  __New() {
+  __New(ctx) {
     if TidyGUI.InstanceHwnd {
       try WinActivate("ahk_id " TidyGUI.InstanceHwnd)
       return TidyGUI.InstanceHwnd
     }
+
+    this.ctx := ctx
 
     ; Set GUI icon (hack)
     /*@Ahk2Exe-Keep
@@ -693,7 +677,7 @@ class TidyGUI extends Gui {
     ;@Ahk2Exe-IgnoreBegin
     TraySetIcon("icon\document.ico")
     ;@Ahk2Exe-IgnoreEnd
-    super.__New(, L.TIDY_Title)
+    super.__New(, this.ctx.L.TIDY_Title)
     /*@Ahk2Exe-Keep
     TraySetIcon("*")
     */
@@ -714,9 +698,9 @@ class TidyGUI extends Gui {
     sel := GetSelection()
     ;this.Edit := this.AddEdit("x12 y12 w560 h474 +Multi +Wrap", sel)
     this.Edit := MultiEdit(this.AddEdit("x12 y12 w560 h474 +Multi +Wrap", sel))
-    this.TextLength := this.AddText("x12 y491 w560 h22", L.TIDY_Length . StrLen(sel))
-    this.AddButton("x12 y516 w277 h33", L.BTN_Tidy).OnEvent("Click", (*) => this.OnTidy()) ; Tidy
-    this.AddButton("x295 y516 w277 h33", L.BTN_TidyCopy).OnEvent("Click", (*) => this.OnTidyCopy()) ; Tidy & Copy
+    this.TextLength := this.AddText("x12 y491 w560 h22", this.ctx.L.TIDY_Length . StrLen(sel))
+    this.AddButton("x12 y516 w277 h33", this.ctx.L.BTN_Tidy).OnEvent("Click", (*) => this.OnTidy()) ; Tidy
+    this.AddButton("x295 y516 w277 h33", this.ctx.L.BTN_TidyCopy).OnEvent("Click", (*) => this.OnTidyCopy()) ; Tidy & Copy
 
     ; Enable AutoComplete on Edit to use Ctrl+Backspace
     ;EnableAutoCompleteOnEdit(this.Edit.Hwnd) ; AutoComplete doesn't work with Multiline
@@ -736,7 +720,6 @@ class TidyGUI extends Gui {
 
   Destroy() {
     h := this.Hwnd
-    c := this.Edit.Value
     super.Destroy()
     if TidyGUI.InstanceHwnd = h
       TidyGUI.InstanceHwnd := 0
@@ -766,7 +749,7 @@ class TidyGUI extends Gui {
 
   RecalcLength() {
     flatLen := this.CountFlatLen(this.Edit.Value)
-    this.TextLength.Value := L.TIDY_Length . flatLen
+    this.TextLength.Value := this.ctx.L.TIDY_Length . flatLen
     return flatLen
   }
 
@@ -817,10 +800,16 @@ class MultiEdit {
     try this.ctrl.Gui.OnEvent("Close", this._OnGuiClose.Bind(this))
   }
 
-  _HotIfcallback(*) {
-    if not this.parentHwnd or not this.classNN
+  _HotIfCallback(*) {
+    if not this.parentHwnd or not this.ClassNN
       return false
-    return WinActive("ahk_id " this.parentHwnd) and ControlGetFocus() = this.ctrl.Hwnd
+    focused := ControlGetFocus("A")
+    if focused = ""
+      return false
+    try focusedHwnd := ControlGetHwnd(focused, "A")
+    catch
+      return false
+    return WinActive("ahk_id " this.parentHwnd) and focusedHwnd = this.ctrl.Hwnd
   }
 
   _OnCtrlBS(*) {
@@ -830,7 +819,7 @@ class MultiEdit {
     }
   }
 
-  _OnGuiclose(*) {
+  _OnGuiClose(*) {
     this.__Delete()
   }
 

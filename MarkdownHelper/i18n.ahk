@@ -55,6 +55,18 @@ class I18N {
     return this
   }
 
+  _mapLang(lang) {
+    key := StrLower(Trim(String(lang)))
+    switch key {
+      case "ko", "kr", "korean":
+        return "ko"
+      case "en", "eng", "english":
+        return "en"
+      default:
+        return "en"
+    }
+  }
+
   Reload(data := "") {
     if IsObject(data)
       this._data := data
