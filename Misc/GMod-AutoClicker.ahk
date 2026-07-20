@@ -29,7 +29,7 @@ ToggleClickRepeat() {
     SoundPlay(A_WinDir . "/Media/Speech Off.wav", true)
   } else {
     is_clicking := True
-    gmod_hwnd := WinGetID("Garry's Mod (x64)")
+    gmod_hwnd := WinGetID("Garry's Mod (64-bit)")
     SetTimer(ClickRepeat, click_speed)
     ClickRepeat()
     SoundPlay(A_WinDir . "/Media/Speech On.wav", true)
