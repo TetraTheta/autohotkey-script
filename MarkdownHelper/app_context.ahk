@@ -31,7 +31,7 @@ BuildAppContext(args) {
   c.TimeoutNew := GetIniIntOrDefault("Timeout", "New Post", 60)
   c.ExplorerExec := IniGet("Explorer", "Executable", "explorer.exe")
   c.ExplorerArgs := IniGet("Explorer", "Arguments", "")
-  c.TerminalExec := IniGet("Terminal", "Executable", "powershell.exe")
+  c.TerminalExec := IniGet("Terminal", "Executable", "pwsh.exe")
   c.TerminalArgs := IniGet("Terminal", "Arguments", '-NoLogo -NoProfile -NoExit -Command "[console]::WindowWidth=120;[console]::WindowHeight=30;Set-Location -LiteralPath `'C:\`'"')
   c.GitGUIExec := IniGet("Git GUI", "Executable", "C:\Program Files\Git\cmd\git-gui.exe")
   c.GitGUIArgs := IniGet("Git GUI", "Arguments", A_ScriptDir)
@@ -48,7 +48,7 @@ BuildAppContext(args) {
   c.KeepConsoleOpen := c.KeepConsoleOpen ? true : false
   c.TerminalArgs := NormalizePowerShellArgsToEncoded(c.TerminalExec, c.TerminalArgs)
   if InStr(StrLower(c.TerminalExec), "cmd.exe") or InStr(StrLower(c.TerminalExec), "command.com") {
-    c.TerminalExec := "powershell.exe"
+    c.TerminalExec := "pwsh.exe"
     if RegExMatch(Trim(c.TerminalArgs), "^(?i)/(K|C)\b")
       c.TerminalArgs := BuildPowerShellArgs("[console]::WindowWidth=120;[console]::WindowHeight=30;Set-Location -LiteralPath " BuildSafePSSingleQuoted(c.ProjectRootDir), true)
     c.TerminalArgs := NormalizePowerShellArgsToEncoded(c.TerminalExec, c.TerminalArgs)
@@ -64,7 +64,7 @@ GetPowerShellConsoleSizePrefix() {
 }
 
 BuildPowerShellRunArgs(psBody, keepOpen := false) {
-  return "powershell.exe " BuildPowerShellArgs(GetPowerShellConsoleSizePrefix() psBody, keepOpen)
+  return "pwsh.exe " BuildPowerShellArgs(GetPowerShellConsoleSizePrefix() psBody, keepOpen)
 }
 
 BuildPowerShellArgs(psBody, keepOpen := false) {
@@ -76,13 +76,13 @@ BuildPowerShellArgs(psBody, keepOpen := false) {
 
 NormalizePowerShellArgsToEncoded(execPath, args) {
   execLower := StrLower(String(execPath))
-  if !InStr(execLower, "powershell.exe") and !InStr(execLower, "pwsh.exe")
+  if !InStr(execLower, "pwsh.exe") and !InStr(execLower, "pwsh.exe")
     return args
 
   argText := Trim(String(args))
   if argText = ""
     return args
-  if InStr(StrLower(argText), "-encodedcommand")
+  if InStr(StrLower(argText), "-EncodedCommand")
     return argText
 
   keepOpen := RegExMatch(argText, "(?i)(^|\s)-NoExit(\s|$)")
