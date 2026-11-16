@@ -87,20 +87,27 @@ GetNumStringArray(inputStr, count) {
   return arr
 }
 
-BuildSafePSSingleQuoted(s) {
-  return "'" StrReplace(String(s), "'", "''") "'"
+/** Quote a literal Bash argument, including embedded single quotes. */
+QuoteBashArgument(value) {
+  return "'" StrReplace(String(value), "'", "'" Chr(34) "'" Chr(34) "'") "'"
 }
 
-BuildSafePSCommand(tokens) {
-  if tokens.Length = 0
-    return ""
-  cmd := "& "
-  for i, t in tokens {
+/** Keep configured executable paths usable in Git Bash. */
+BuildSafeBashCommand(tokens) {
+  command := ""
+  for i, token in tokens {
     if i > 1
-      cmd .= " "
-    cmd .= BuildSafePSSingleQuoted(t)
+      command .= " "
+    command .= QuoteBashArgument(i = 1 ? StrReplace(token, "\", "/") : token)
   }
-  return cmd
+  return command
+}
+
+/** Escape backslashes before quotes and the closing Windows argument delimiter. */
+QuoteWindowsArgument(value) {
+  text := RegExReplace(String(value), '(\\*)"', '$1$1\"')
+  text := RegExReplace(text, '(\\+)$', '$1$1')
+  return Chr(34) text Chr(34)
 }
 
 ParseWindowsCommandLine(text) {

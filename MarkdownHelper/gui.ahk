@@ -594,9 +594,7 @@ class NewGUI extends TimedModalGui {
     cliTokens.Push(kind)
     cliTokens.Push(title)
 
-    psBody := BuildSafePSCommand(cliTokens)
-    args := BuildPowerShellRunArgs(psBody, this.ctx.C.KeepConsoleOpen)
-    Run(args, this.ctx.C.ProjectRootDir)
+    RunBash(this.ctx, BuildSafeBashCommand(cliTokens), this.ctx.C.KeepConsoleOpen)
   }
 
   OnOK() {

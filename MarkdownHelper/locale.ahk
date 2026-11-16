@@ -33,6 +33,9 @@ MarkdownHelperIntlData := Map(
   "NEW_Message", { en: "Enter a category and name for the new content.", ko: "새 콘텐츠의 카테고리와 제목을 입력하세요." },
   "NEW_NewTitle", { en: "Content Title", ko: "콘텐츠 타이틀" },
   "NEW_Title", { en: "Create a New Content", ko: "새 콘텐츠 생성" },
+  "TERM_InvalidType", { en: "Supported terminal types: git-bash, alacritty-bash.", ko: "지원하는 터미널 타입: git-bash, alacritty-bash." },
+  "TERM_LaunchFailed", { en: "Unable to launch the terminal. Check MarkdownHelper.ini.", ko: "터미널을 실행할 수 없습니다. MarkdownHelper.ini를 확인하세요." },
+  "TERM_MissingExecutable", { en: "Check the terminal executable path:", ko: "터미널 실행 파일 경로를 확인하세요:" },
   "TIDY_Length", { en: "Length: ", ko: "텍스트 길이: " },
   "TIDY_Title", { en: "Tidy Text", ko: "텍스트 정돈" },
 )

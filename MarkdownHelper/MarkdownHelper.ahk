@@ -2,7 +2,7 @@
  * @description My Hugo Blog Markdown Helper
  * @author TetraTheta
  * @date 2023/10/22
- * @version 3.1.0
+ * @version 3.2.0
  ***********************************************************************/
 ; No need to worry about multiple '#Include' usage of same file, because AutoHotkey will include it only once.
 #Requires AutoHotkey v2.0
@@ -21,7 +21,7 @@
 ;@Ahk2Exe-SetCompanyName TetraTheta
 ;@Ahk2Exe-SetCopyright Copyright (c) 2023. TetraTheta. All rights reserved.
 ;@Ahk2Exe-SetDescription My Hugo Blog Markdown Helper
-;@Ahk2Exe-SetFileVersion 3.1.0.0
+;@Ahk2Exe-SetFileVersion 3.2.0.0
 ;@Ahk2Exe-SetMainIcon icon\main.ico ; Default icon
 ;@Ahk2Exe-SetProductName MarkdownHelper
 
@@ -55,10 +55,10 @@ SetupMenu(ctx) {
   menuPMDependenciesUpdate := Format(L.MENU_PMDependenciesUpdate, C.DetectedPM)
   RunScriptMenu.Add(L.MENU_NewContent, (*) => CreateNewContent(ctx))
   RunScriptMenu.Add()
-  RunScriptMenu.Add(L.MENU_HugoModuleUpdate, (*) => Run(BuildPowerShellRunArgs("$Host.UI.RawUI.WindowTitle='Updating Hugo Modules...';hugo mod get -u ./...;hugo mod tidy;Write-Host '==== DONE ====' -ForegroundColor Green;[void][System.Console]::ReadKey($false)", true), C.ProjectRootDir))
+  RunScriptMenu.Add(L.MENU_HugoModuleUpdate, (*) => RunMaintenance(ctx, "Updating Hugo Modules...", ["hugo mod get -u ./...", "hugo mod tidy"]))
   RunScriptMenu.Add(menuPMDependenciesUpdate, (*) => RunPMDependenciesUpdate(ctx))
   RunScriptMenu.Add()
-  RunScriptMenu.Add(L.MENU_HugoModuleTidy, (*) => Run(BuildPowerShellRunArgs("$Host.UI.RawUI.WindowTitle='Tidying Hugo Modules...';hugo mod tidy;Write-Host '==== DONE ====' -ForegroundColor Green;[void][System.Console]::ReadKey($false)", true), C.ProjectRootDir))
+  RunScriptMenu.Add(L.MENU_HugoModuleTidy, (*) => RunMaintenance(ctx, "Tidying Hugo Modules...", ["hugo mod tidy"]))
   /*@Ahk2Exe-Keep
   RunScriptMenu.SetIcon(L.MENU_NewContent, "HICON:" GetEmbeddedIcon(216, 16))
   RunScriptMenu.SetIcon(L.MENU_HugoModuleUpdate, "HICON:" GetEmbeddedIcon(211, 16))
@@ -85,16 +85,10 @@ SetupMenu(ctx) {
   MainMenu := A_TrayMenu
   MainMenu.Delete()
   MainMenu.Add(L.MENU_OpenExplorer, (*) => Run("`"" . C.ExplorerExec . "`" " . C.ExplorerArgs))
-  MainMenu.Add(L.MENU_OpenTerminal, (*) => (
-    termCmd := BuildTerminalLaunchCommand(ctx),
-    Run(termCmd, C.ProjectRootDir)
-  ))
+  MainMenu.Add(L.MENU_OpenTerminal, (*) => RunBash(ctx))
   MainMenu.Add(L.MENU_OpenGitGUI, (*) => Run("`"" . C.GitGUIExec . "`" " . C.GitGUIArgs, C.ProjectRootDir))
   MainMenu.Add()
-  MainMenu.Add(L.MENU_StartHugoDev, (*) => (
-    devCmd := BuildPowerShellRunArgs(BuildPowerShellInvokeRaw(C.DevExec, C.DevArgs), C.KeepConsoleOpen),
-    Run(devCmd, C.ProjectRootDir)
-  ))
+  MainMenu.Add(L.MENU_StartHugoDev, (*) => RunDevServer(ctx))
   MainMenu.Add(L.MENU_OpenTestPage, (*) => OpenTestPage(ctx))
   MainMenu.Add()
   MainMenu.Add(L.MENU_RunScript, RunScriptMenu)
@@ -123,7 +117,11 @@ SetupMenu(ctx) {
 
 RegisterHotkeys(ctx) {
   Hotkey("^B", (*) => HandleQuoteWrap())
+  ; Disable Ctrl+Shift+C for Alacritty
+  HotIf((*) => !WinActive("ahk_exe alacritty.exe"))
   Hotkey("^+C", (*) => ShowTidyGUI(ctx))
+  HotIf()
+  ; Reset HotIf
   Hotkey("^D", (*) => ShowImageGUI(ctx, true))
   Hotkey("^+D", (*) => ShowImageGUI(ctx, false))
   Hotkey("^G", (*) => ShowGalleryGUI(ctx, 2))

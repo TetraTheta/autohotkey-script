@@ -31,8 +31,21 @@ BuildAppContext(args) {
   c.TimeoutNew := GetIniIntOrDefault("Timeout", "New Post", 60)
   c.ExplorerExec := IniGet("Explorer", "Executable", "explorer.exe")
   c.ExplorerArgs := IniGet("Explorer", "Arguments", "")
-  c.TerminalExec := IniGet("Terminal", "Executable", "pwsh.exe")
-  c.TerminalArgs := IniGet("Terminal", "Arguments", '-NoLogo -NoProfile -NoExit -Command "[console]::WindowWidth=120;[console]::WindowHeight=30;Set-Location -LiteralPath `'C:\`'"')
+  c.TerminalType := StrLower(Trim(IniGet("Terminal", "Type", "git-bash")))
+  profiles := Map(
+    "git-bash", ["C:\Program Files\Git\git-bash.exe", ""],
+    "alacritty-bash", ["C:\path\to\alacritty.exe", '--config-file "C:\path\to\git_bash_profile.toml"']
+  )
+  for terminalType, defaults in profiles {
+    execPath := IniGet("Terminal." terminalType, "Executable", defaults[1])
+    arguments := IniGet("Terminal." terminalType, "Arguments", defaults[2])
+    if terminalType = "git-bash"
+      c.GitBashExec := execPath
+    if terminalType = c.TerminalType {
+      c.TerminalExec := execPath
+      c.TerminalArgs := arguments
+    }
+  }
   c.GitGUIExec := IniGet("Git GUI", "Executable", "C:\Program Files\Git\cmd\git-gui.exe")
   c.GitGUIArgs := IniGet("Git GUI", "Arguments", A_ScriptDir)
   c.DevExec := IniGet("Dev Server", "Executable", "hugo.exe")
@@ -46,111 +59,78 @@ BuildAppContext(args) {
   c.RecentTitle4 := IniKey(, "Recent", "Title 4")
   c.RecentTitle5 := IniKey(, "Recent", "Title 5")
   c.KeepConsoleOpen := c.KeepConsoleOpen ? true : false
-  c.TerminalArgs := NormalizePowerShellArgsToEncoded(c.TerminalExec, c.TerminalArgs)
-  if InStr(StrLower(c.TerminalExec), "cmd.exe") or InStr(StrLower(c.TerminalExec), "command.com") {
-    c.TerminalExec := "pwsh.exe"
-    if RegExMatch(Trim(c.TerminalArgs), "^(?i)/(K|C)\b")
-      c.TerminalArgs := BuildPowerShellArgs("[console]::WindowWidth=120;[console]::WindowHeight=30;Set-Location -LiteralPath " BuildSafePSSingleQuoted(c.ProjectRootDir), true)
-    c.TerminalArgs := NormalizePowerShellArgsToEncoded(c.TerminalExec, c.TerminalArgs)
-  }
   c.DetectedPM := DetectPackageManager(c.ProjectRootDir)
   ctx.C := c
 
   return ctx
 }
 
-GetPowerShellConsoleSizePrefix() {
-  return "[console]::WindowWidth=120;[console]::WindowHeight=30;"
+/** Builds a command for the selected terminal without changing its profile file. */
+BuildBashRunCommand(ctx, body := "", keepOpen := false) {
+  c := ctx.C
+  if c.TerminalType != "git-bash" and c.TerminalType != "alacritty-bash"
+    throw Error(ctx.L.TERM_InvalidType " [Terminal] Type=" c.TerminalType)
+  if !FileExist(c.TerminalExec) or InStr(FileExist(c.TerminalExec), "D")
+    throw Error(ctx.L.TERM_MissingExecutable " [Terminal." c.TerminalType "] Executable=" c.TerminalExec)
+
+  script := BuildBashScript(c.ProjectRootDir, body, keepOpen)
+  command := QuoteWindowsArgument(c.TerminalExec)
+  if Trim(c.TerminalArgs) != ""
+    command .= " " c.TerminalArgs
+  if c.TerminalType = "git-bash"
+    return command " --cd=" QuoteWindowsArgument(c.ProjectRootDir) " -c " QuoteWindowsArgument(script)
+
+  ; Alacritty cannot partially override its shell enum; use its command interface instead.
+  bashExec := FindGitBashExecutable(c.GitBashExec)
+  ; Windows Alacritty joins -e arguments raw, so quote again for its child process.
+  return command " --working-directory " QuoteWindowsArgument(c.ProjectRootDir) . " -e " QuoteWindowsArgument(QuoteWindowsArgument(bashExec)) " --login -i -c " QuoteWindowsArgument(QuoteWindowsArgument(script))
 }
 
-BuildPowerShellRunArgs(psBody, keepOpen := false) {
-  return "pwsh.exe " BuildPowerShellArgs(GetPowerShellConsoleSizePrefix() psBody, keepOpen)
-}
-
-BuildPowerShellArgs(psBody, keepOpen := false) {
-  encoded := ToBase64UTF16LE(String(psBody))
-  if keepOpen
-    return "-NoLogo -NoProfile -NoExit -EncodedCommand " encoded
-  return "-NoLogo -NoProfile -EncodedCommand " encoded
-}
-
-NormalizePowerShellArgsToEncoded(execPath, args) {
-  execLower := StrLower(String(execPath))
-  if !InStr(execLower, "pwsh.exe") and !InStr(execLower, "pwsh.exe")
-    return args
-
-  argText := Trim(String(args))
-  if argText = ""
-    return args
-  if InStr(StrLower(argText), "-EncodedCommand")
-    return argText
-
-  keepOpen := RegExMatch(argText, "(?i)(^|\s)-NoExit(\s|$)")
-
-  psBody := ExtractPowerShellCommandBody(argText, &hasCommand)
-  if hasCommand
-    return BuildPowerShellArgs(psBody, keepOpen)
-  return args
-}
-
-ExtractPowerShellCommandBody(argText, &hasCommand := false) {
-  hasCommand := false
-  if !RegExMatch(argText, "(?i)-Command\b", &m)
-    return ""
-  hasCommand := true
-
-  body := Trim(SubStr(argText, m.Pos + m.Len), " `t`r`n")
-  if body = ""
-    return ""
-
-  dq := Chr(34)
-  sq := Chr(39)
-  tick := Chr(96)
-
-  loop 4 {
-    n := StrLen(body)
-    if n < 2
-      break
-
-    first1 := SubStr(body, 1, 1)
-    last1 := SubStr(body, n, 1)
-    first2 := n >= 2 ? SubStr(body, 1, 2) : ""
-    last2 := n >= 2 ? SubStr(body, n - 1, 2) : ""
-
-    if (first2 = tick dq and last2 = tick dq) {
-      body := SubStr(body, 3, n - 4)
-      continue
-    }
-    if (first2 = tick dq and last1 = dq) {
-      body := SubStr(body, 3, n - 3)
-      continue
-    }
-    if (first1 = dq and last2 = tick dq) {
-      body := SubStr(body, 2, n - 3)
-      continue
-    }
-    if (first1 = dq and last1 = dq) {
-      body := SubStr(body, 2, n - 2)
-      continue
-    }
-    if (first1 = sq and last1 = sq) {
-      body := SubStr(body, 2, n - 2)
-      continue
-    }
-    break
+/** Support portable Git beside git-bash.exe, then registered Git for Windows installs. */
+FindGitBashExecutable(gitBashExec) {
+  SplitPath(gitBashExec, , &gitDir)
+  candidates := [gitDir "\bin\bash.exe"]
+  for key in ["HKCU\Software\GitForWindows", "HKLM\Software\GitForWindows", "HKLM\Software\WOW6432Node\GitForWindows"] {
+    installPath := RegRead(key, "InstallPath", "")
+    if installPath != ""
+      candidates.Push(installPath "\bin\bash.exe")
   }
-
-  body := StrReplace(body, tick dq, dq)
-  body := StrReplace(body, dq dq, dq)
-  return body
+  for _, candidate in candidates {
+    if FileExist(candidate) and !InStr(FileExist(candidate), "D")
+      return candidate
+  }
+  throw Error("Git for Windows bin\bash.exe was not found. Install Git for Windows or set [Terminal.git-bash] Executable to its git-bash.exe.")
 }
 
-BuildPowerShellInvokeRaw(execPath, args := "") {
-  argText := Trim(String(args))
-  cmd := "& " BuildSafePSSingleQuoted(execPath)
-  if argText != ""
-    cmd .= " " argText
-  return cmd
+/** Re-enter the project directory after login profiles have run. */
+BuildBashScript(projectRootDir, body := "", keepOpen := false) {
+  script := "cd -- " QuoteBashArgument(StrReplace(projectRootDir, "\", "/")) " || exit $?`n"
+  ; Keep the launcher alive when Ctrl+C interrupts a foreground task.
+  if keepOpen
+    script .= "trap ':' INT`n"
+  if body != ""
+    script .= body "`nmh_status=$?`n"
+  else
+    script .= "mh_status=0`n"
+  if keepOpen or body = ""
+    script .= "exec bash -i"
+  else
+    script .= 'exit "$mh_status"'
+  return script
+}
+
+/** Report launch errors without disabling unrelated GUI helpers. */
+RunBash(ctx, body := "", keepOpen := false) {
+  try Run(BuildBashRunCommand(ctx, body, keepOpen), ctx.C.ProjectRootDir)
+  catch Error as err
+    MsgBox(ctx.L.TERM_LaunchFailed "`n`n" err.Message, "MarkdownHelper", 48)
+}
+
+RunDevServer(ctx, *) {
+  tokens := [StrReplace(ctx.C.DevExec, "\", "/")]
+  for _, token in ParseWindowsCommandLine(ctx.C.DevArgs)
+    tokens.Push(token)
+  RunBash(ctx, BuildSafeBashCommand(tokens), ctx.C.KeepConsoleOpen)
 }
 
 GetIniIntOrDefault(section, key, defaultValue, minValue := 1) {
@@ -158,46 +138,6 @@ GetIniIntOrDefault(section, key, defaultValue, minValue := 1) {
   if value < minValue
     return defaultValue
   return value
-}
-
-ToBase64UTF16LE(text) {
-  s := String(text)
-  ; Encode exactly StrLen(s) UTF-16 code units (no trailing null/padding).
-  charCount := StrLen(s)
-  utf16Buf := Buffer((charCount + 1) * 2, 0)
-  StrPut(s, utf16Buf, charCount + 1, "UTF-16")
-  dataByteCount := charCount * 2
-
-  needed := 0
-  if !DllCall("Crypt32\CryptBinaryToStringW"
-    , "ptr", utf16Buf.Ptr
-    , "uint", dataByteCount
-    , "uint", 0x40000001
-    , "ptr", 0
-    , "uint*", &needed)
-    throw Error("CryptBinaryToStringW failed (size query).")
-
-  out := Buffer(needed * 2, 0)
-  if !DllCall("Crypt32\CryptBinaryToStringW"
-    , "ptr", utf16Buf.Ptr
-    , "uint", dataByteCount
-    , "uint", 0x40000001
-    , "ptr", out.Ptr
-    , "uint*", &needed)
-    throw Error("CryptBinaryToStringW failed.")
-
-  return StrGet(out.Ptr)
-}
-
-BuildQuotedCommand(execPath, args := "") {
-  argText := Trim(String(args))
-  if argText = ""
-    return "`"" String(execPath) "`""
-  return "`"" String(execPath) "`" " argText
-}
-
-BuildTerminalLaunchCommand(ctx) {
-  return BuildQuotedCommand(ctx.C.TerminalExec, ctx.C.TerminalArgs)
 }
 
 GetCategoryMap(lang) {
@@ -280,23 +220,39 @@ GetCLIBaseCommand(ctx) {
   return GetDefaultCLICommand(ctx.C.DetectedPM)
 }
 
-GetPMDependenciesUpdatePSCommand(pm) {
+GetPMDependenciesUpdateCommands(pm) {
   switch pm {
     case "pnpm":
-      return "$Host.UI.RawUI.WindowTitle='Updating Dependencies (pnpm)...';pnpm outdated;pnpm update;pnpm install --lockfile-only;Write-Host '==== DONE ====' -ForegroundColor Green;[void][System.Console]::ReadKey($false)"
+      return ["pnpm outdated", "pnpm update", "pnpm install --lockfile-only"]
     case "yarn":
-      return "$Host.UI.RawUI.WindowTitle='Updating Dependencies (yarn)...';yarn outdated;yarn up;yarn install;Write-Host '==== DONE ====' -ForegroundColor Green;[void][System.Console]::ReadKey($false)"
+      return ["yarn outdated", "yarn up", "yarn install"]
     case "bun":
-      return "$Host.UI.RawUI.WindowTitle='Updating Dependencies (bun)...';bun outdated;bun update;bun install --lockfile-only;Write-Host '==== DONE ====' -ForegroundColor Green;[void][System.Console]::ReadKey($false)"
-    case "npm":
-      return "$Host.UI.RawUI.WindowTitle='Updating Dependencies (npm)...';npm outdated;npm update;npm install --package-lock-only;Write-Host '==== DONE ====' -ForegroundColor Green;[void][System.Console]::ReadKey($false)"
+      return ["bun outdated", "bun update", "bun install --lockfile-only"]
     default:
-      return "$Host.UI.RawUI.WindowTitle='Updating Dependencies (npm)...';npm outdated;npm update;npm install --package-lock-only;Write-Host '==== DONE ====' -ForegroundColor Green;[void][System.Console]::ReadKey($false)"
+      return ["npm outdated", "npm update", "npm install --package-lock-only"]
   }
+}
+
+/** Preserve the completion marker while reporting failed maintenance steps. */
+BuildMaintenanceScript(title, commands) {
+  script := "printf '\033]0;%s\007' " QuoteBashArgument(title) "`nmh_failed=0`n"
+  for _, command in commands {
+    script .= command "`nmh_step=$?`n"
+    script .= "if (( mh_step != 0 )); then printf 'FAILED (%s): %s\n' "
+      . '"$mh_step" ' QuoteBashArgument(command) " >&2; mh_failed=1; fi`n"
+  }
+  script .= "if (( mh_failed != 0 )); then printf '\033[31m==== COMPLETED WITH ERRORS ====\033[0m\n'; fi`n"
+  script .= "printf '\033[32m==== DONE ====\033[0m\n'`n"
+  script .= "read -r -n 1 -p 'Press any key to continue...' </dev/tty; printf '\n'`n"
+  script .= '(exit "$mh_failed")'
+  return script
+}
+
+RunMaintenance(ctx, title, commands) {
+  RunBash(ctx, BuildMaintenanceScript(title, commands), true)
 }
 
 RunPMDependenciesUpdate(ctx, *) {
   pm := DetectPackageManager(ctx.C.ProjectRootDir)
-  psCommand := GetPMDependenciesUpdatePSCommand(pm)
-  Run(BuildPowerShellRunArgs(psCommand, true), ctx.C.ProjectRootDir)
+  RunMaintenance(ctx, "Updating Dependencies (" pm ")...", GetPMDependenciesUpdateCommands(pm))
 }
